@@ -444,6 +444,15 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
             "Standard",
             snapshot.state == AnycubicWorkbenchState::printing ? u8(u8"Ativa") : u8(u8"Aguardando")};
         for (int i = 0; i < 6; ++i) {
+            wxString label = labels[i];
+            wxString value = values[i];
+            if (i == 2)
+                label = u8("Luz da c\\u00e2mera");
+            else if (i == 5)
+                label = u8("Detec\\u00e7\\u00e3o");
+            if (i < 2)
+                value = wxString::Format(u8("%.0f\\u00b0C / %.0f\\u00b0C"), i == 0 ? snapshot.nozzle_temperature : snapshot.bed_temperature,
+                                         i == 0 ? snapshot.nozzle_target_temperature : snapshot.bed_target_temperature);
             const int x = (i % 3) * (width + gap);
             const int y = (i / 3) * (height + gap);
             const wxRect tile(x, y, width, height);
@@ -451,9 +460,9 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
             dc.SetPen(wxPen(wxColour(232, 234, 238), 1));
             dc.DrawRoundedRectangle(tile, 9);
             dc.SetTextForeground(wxColour(128, 132, 140));
-            dc.DrawText(labels[i], tile.x + 10, tile.y + 8);
+            dc.DrawText(label, tile.x + 10, tile.y + 8);
             dc.SetTextForeground(kInk);
-            dc.DrawText(values[i], tile.x + 10, tile.y + 28);
+            dc.DrawText(value, tile.x + 10, tile.y + 28);
         }
     });
     control.body->Add(m_control_metrics, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 10);
