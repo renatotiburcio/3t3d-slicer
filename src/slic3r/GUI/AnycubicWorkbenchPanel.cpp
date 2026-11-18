@@ -145,6 +145,14 @@ std::vector<double> object_rotations(std::size_t count)
     return rotations;
 }
 
+wxString short_object_name(const std::string& name)
+{
+    wxString label = wxString::FromUTF8(name);
+    if (label.Length() > 14)
+        label = label.Left(13) + "...";
+    return label;
+}
+
 struct WorkbenchCard
 {
     wxPanel*     panel;
@@ -275,6 +283,8 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
             dc.DrawRoundedRectangle(shapes[i], 8);
             dc.SetTextForeground(*wxWHITE);
             dc.DrawText(wxString::Format("ID %zu", i), points[i].x - 16, points[i].y - 8);
+            if (i < m_simulator.snapshot().print_objects.size())
+                dc.DrawText(short_object_name(m_simulator.snapshot().print_objects[i]), shapes[i].x + 5, shapes[i].y + shapes[i].height - 19);
             const int arrow_length = std::max(8, std::min(shapes[i].GetWidth(), shapes[i].GetHeight()) / 3);
             const wxPoint tip(points[i].x + static_cast<int>(std::cos(rotations[i]) * arrow_length),
                               points[i].y - static_cast<int>(std::sin(rotations[i]) * arrow_length));
@@ -320,7 +330,7 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     });
     camera.body->Add(m_plate_preview, 1, wxEXPAND | wxALL, 8);
     camera.body->Add(body_text(camera.panel, u8(u8"Pr\u00e9-visualiza\u00e7\u00e3o simulada")), 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
-    camera.body->Add(body_text(camera.panel, u8(u8"Ciano, magenta e verde identificam os objetos da tarefa.")), 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
+    camera.body->Add(body_text(camera.panel, u8(u8"Legenda: contorno escuro = selecionado | seta = orienta\u00e7\u00e3o | cinza + IGN = ignorado.")), 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
     center->Add(camera.panel, 1, wxEXPAND | wxBOTTOM, 14);
     content->Add(center, 2, wxEXPAND | wxRIGHT, 2);
 
@@ -462,6 +472,7 @@ void AnycubicWorkbenchPanel::on_skip_objects(wxCommandEvent&)
             const bool skipped = list != nullptr && list->IsChecked(static_cast<unsigned int>(i));
             dc.SetBrush(wxBrush(skipped ? wxColour(170, 174, 180) : colors[i])); dc.SetPen(wxPen(*wxWHITE, 2)); dc.DrawRoundedRectangle(shapes[i], 10);
             dc.SetTextForeground(*wxWHITE); dc.DrawText(wxString::Format("ID %zu", i), points[i].x - 18, points[i].y - 9);
+            dc.DrawText(short_object_name(snapshot.print_objects[i]), shapes[i].x + 7, shapes[i].y + shapes[i].height - 20);
             const int arrow_length = std::max(12, std::min(shapes[i].GetWidth(), shapes[i].GetHeight()) / 3);
             const wxPoint tip(points[i].x + static_cast<int>(std::cos(rotations[i]) * arrow_length),
                               points[i].y - static_cast<int>(std::sin(rotations[i]) * arrow_length));
