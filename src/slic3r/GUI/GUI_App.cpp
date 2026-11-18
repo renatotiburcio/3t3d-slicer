@@ -894,7 +894,7 @@ static void generic_exception_handle()
         // and terminate the app so it is at least certain to happen now.
         BOOST_LOG_TRIVIAL(error) << boost::format("std::bad_alloc exception: %1%") % ex.what();
         flush_logs();
-        wxString errmsg = wxString::Format(_L("OrcaSlicer will terminate because of running out of memory. "
+        wxString errmsg = wxString::Format(_L("3T3D Slicer will terminate because of running out of memory. "
                                               "It may be a bug. It will be appreciated if you report the issue to our team."));
         wxMessageBox(errmsg + "\n\n" + wxString(ex.what()), _L("Fatal error"), wxOK | wxICON_ERROR);
 
@@ -903,7 +903,7 @@ static void generic_exception_handle()
      } catch (const boost::io::bad_format_string& ex) {
      	BOOST_LOG_TRIVIAL(error) << boost::format("Uncaught exception: %1%") % ex.what();
         	flush_logs();
-        wxString errmsg = _L("OrcaSlicer will terminate because of a localization error. "
+        wxString errmsg = _L("3T3D Slicer will terminate because of a localization error. "
                              "It will be appreciated if you report the specific scenario this issue happened.");
         wxMessageBox(errmsg + "\n\n" + wxString(ex.what()), _L("Critical error"), wxOK | wxICON_ERROR);
         std::terminate();
@@ -911,7 +911,7 @@ static void generic_exception_handle()
     } catch (const std::exception& ex) {
         BOOST_LOG_TRIVIAL(error) << boost::format("Uncaught exception: %1%") % ex.what();
         flush_logs();
-        wxLogError(format_wxstr(_L("OrcaSlicer got an unhandled exception: %1%"), ex.what()));
+        wxLogError(format_wxstr(_L("3T3D Slicer got an unhandled exception: %1%"), ex.what()));
         throw;
     }
 //#endif
@@ -1141,6 +1141,14 @@ void GUI_App::post_init()
     if (this->preset_updater) { // G-Code Viewer does not initialize preset_updater.
         CallAfter([this] {
             bool cw_showed = this->config_wizard_startup();
+
+            // The wizard must be usable before the optional network/plugin stack
+            // is initialized. Start it after the modal flow returns so a slow or
+            // unavailable network plugin cannot leave the welcome screen waiting.
+            if (!is_closing() && m_agent == nullptr) {
+                copy_network_if_available();
+                on_init_network();
+            }
 
             if (!app_config->get_stealth_mode()) {
                 std::string http_url = get_http_url(app_config->get_country_code());
@@ -2712,7 +2720,7 @@ void GUI_App::init_webview_runtime()
     }
 
     BOOST_LOG_TRIVIAL(warning) << "WebView2 runtime not found; prompting user to install.";
-    int nRet = wxMessageBox(_L("Orca Slicer requires the Microsoft WebView2 Runtime to operate certain features.\nClick Yes to install it now."),
+    int nRet = wxMessageBox(_L("3T3D Slicer requires the Microsoft WebView2 Runtime to operate certain features.\nClick Yes to install it now."),
                             _L("WebView2 Runtime"), wxYES_NO);
     if (nRet != wxYES) {
         BOOST_LOG_TRIVIAL(warning) << "User declined WebView2 runtime installation.";
@@ -2734,7 +2742,7 @@ void GUI_App::init_webview_runtime()
         BOOST_LOG_TRIVIAL(error) << "WebView2 runtime installation failed or still not detected.";
         wxMessageBox(format_wxstr(_L("The Microsoft WebView2 Runtime could not be installed.\n"
                                      "Some features, including the setup wizard, may appear blank until it is installed.\n"
-                                     "Please install it manually from %1% and restart Orca Slicer."),
+                                      "Please install it manually from %1% and restart 3T3D Slicer."),
                                   "https://developer.microsoft.com/microsoft-edge/webview2/"),
                      _L("WebView2 Runtime"), wxOK | wxICON_WARNING);
     }
@@ -3353,7 +3361,7 @@ bool GUI_App::on_init_inner()
             RichMessageDialog
                 dlg(nullptr,
                     wxString::Format(_L("%s\nDo you want to continue?"), msg),
-                    "OrcaSlicer", wxICON_QUESTION | wxYES_NO);
+                    "3T3D Slicer", wxICON_QUESTION | wxYES_NO);
             dlg.ShowCheckBox(_L("Remember my choice"));
             if (dlg.ShowModal() != wxID_YES) return false;
 
@@ -3497,7 +3505,7 @@ bool GUI_App::on_init_inner()
                /* wxString tips = wxString::Format(_L("Click to download new version in default browser: %s"), version_info.version_str);
                 DownloadDialog dialog(this->mainframe,
                     tips,
-                    _L("New version of Orca Slicer"),
+                    _L("New version of 3T3D Slicer"),
                     false,
                     wxCENTER | wxICON_INFORMATION);
 
@@ -3548,7 +3556,7 @@ bool GUI_App::on_init_inner()
                 wxString tips = wxString::Format(_L("Click to download new version in default browser: %s"), version_str);
                 DownloadDialog dialog(this->mainframe,
                     tips,
-                    _L("OrcaSlicer needs an update"),
+                    _L("3T3D Slicer needs an update"),
                     false,
                     wxCENTER | wxICON_INFORMATION);
                 dialog.SetExtendedMessage(description_text);
@@ -3657,76 +3665,11 @@ bool GUI_App::on_init_inner()
         }
     }
 
-    copy_network_if_available();
-    on_init_network();
-
-    if (m_agent)
-        plugin_mgr.set_cloud_agent(std::dynamic_pointer_cast<OrcaCloudServiceAgent>(m_agent->get_cloud_agent()));
-
-    if (m_agent && m_agent->is_user_login()) {
-        enable_user_preset_folder(true);
-        const std::string cloud_user_id = m_agent->get_user_id();
-        plugin_mgr.set_cloud_user(cloud_user_id);
-        // Sync cloud plugin metadata off the UI thread; the network round trips took ~2 s of startup.
-        m_startup_cloud_plugin_fetch_thread = Slic3r::create_thread([this, cloud_user_id] {
-            std::vector<std::string> not_found, unauthorized;
-            try {
-                PluginManager::instance().fetch_plugins_from_cloud(&not_found, &unauthorized);
-            } catch (const std::exception& ex) {
-                BOOST_LOG_TRIVIAL(error) << "Startup cloud plugin fetch failed: " << ex.what();
-                return;
-            } catch (...) {
-                BOOST_LOG_TRIVIAL(error) << "Startup cloud plugin fetch failed";
-                return;
-            }
-            auto report = [this, cloud_user_id, not_found = std::move(not_found), unauthorized = std::move(unauthorized)] {
-                if (is_closing())
-                    return;
-                if (m_plugins_dlg)
-                    m_plugins_dlg->update_plugin_dialog_ui();
-                Plater* plater = this->plater();
-                if (plater == nullptr || m_agent == nullptr || !m_agent->is_user_login() ||
-                    m_agent->get_user_id() != cloud_user_id)
-                    return; // logged out or switched account meanwhile
-                for (const auto& uuid : not_found) {
-                    plater->get_notification_manager()->push_notification(
-                        NotificationType::CustomNotification,
-                        NotificationManager::NotificationLevel::RegularNotificationLevel,
-                        format(_L("Plugin %s is no longer available."), uuid));
-                }
-                for (const auto& uuid : unauthorized) {
-                    plater->get_notification_manager()->push_notification(
-                        NotificationType::CustomNotification,
-                        NotificationManager::NotificationLevel::RegularNotificationLevel,
-                        format(_L("Plugin %s access is unauthorized."), uuid));
-                }
-
-                // If the fetch finished before the plater existed, PluginManager could not deliver
-                // its update notice. Deliver it here from post_init(). update_available is only set
-                // by a successful fetch, so this remains success-only, and reading it now keeps the
-                // notice fresh if updates were installed while the report was deferred.
-                NotificationManager* notifications = plater->get_notification_manager();
-                if (notifications != nullptr &&
-                    !notifications->has_notification_of_type(NotificationType::OrcaCloudPluginUpdateAvailable)) {
-                    const std::vector<PluginDescriptor> descriptors = PluginManager::instance().get_plugin_descriptors();
-                    const bool has_update = std::any_of(descriptors.begin(), descriptors.end(),
-                                                        [](const PluginDescriptor& descriptor) { return descriptor.has_update_available(); });
-                    if (has_update)
-                        notifications->push_notification(NotificationType::OrcaCloudPluginUpdateAvailable);
-                }
-            };
-            // This can run in a splash wxYield() before the main window exists.
-            CallAfter([this, report = std::move(report)]() mutable {
-                if (m_post_initialized)
-                    report();
-                else
-                    m_startup_cloud_report = std::move(report);
-            });
-        });
-    } else {
-        enable_user_preset_folder(false);
-        plugin_mgr.set_cloud_user("");
-    }
+    // 3T3D keeps the first startup local and offline. Cloud accounts and cloud plugin
+    // synchronization are intentionally not initialized here; this removes the
+    // network round-trip that used to keep the configuration wizard loading.
+    enable_user_preset_folder(false);
+    plugin_mgr.set_cloud_user("");
 
     // BBS if load user preset failed
     // Let the libslic3r know the callback, which will translate messages on demand.
@@ -5974,7 +5917,7 @@ void GUI_App::on_http_error(wxCommandEvent &evt)
 
     // Version limit
     if (code == HttpErrorVersionLimited) {
-        MessageDialog msg_dlg(nullptr, _L("The version of Orca Slicer is too low and needs to be updated to the latest version before it can be used normally."), "", wxAPPLY | wxOK);
+        MessageDialog msg_dlg(nullptr, _L("The version of 3T3D Slicer is too low and needs to be updated to the latest version before it can be used normally."), "", wxAPPLY | wxOK);
         if (msg_dlg.ShowModal() == wxOK) {
         }
     }
@@ -7248,7 +7191,7 @@ void GUI_App::check_legacy_user_filament_presets(bool by_user)
         return;
     }
 
-    wxString message = _L("OrcaSlicer 2.5.0 restructured many system filament presets to fix incorrect profiles and prepare "
+    wxString message = _L("3T3D Slicer restructured many system filament presets to fix incorrect profiles and prepare "
                           "for future features. As a result, the presets below no longer show on some printers they were made "
                           "for. Sorry for the trouble; this is a one-time fix.\n\n"
                           "Add those printers back to your presets now? Your presets are backed up first. You can also do this "
@@ -8786,14 +8729,14 @@ bool GUI_App::load_language(wxString language, bool initial)
 
     if (!wxLocale::IsAvailable(locale_language_info->Language)) {
     	// Loading the language dictionary failed.
-	    wxString message = wxString::Format(_L("Switching Orca Slicer to language %s failed."), requested_language_code);
+	    wxString message = wxString::Format(_L("Switching 3T3D Slicer to language %s failed."), requested_language_code);
 #if !defined(_WIN32) && !defined(__APPLE__)
         // likely some linux system
         message += _L("\nYou may need to reconfigure the missing locales, likely by running the \"locale-gen\" and \"dpkg-reconfigure locales\" commands.\n");
 #endif
         if (initial)
         	message += "\n\n" + _L("Application will close.");
-        wxMessageBox(message, _L("Orca Slicer - Switching language failed"), wxOK | wxICON_ERROR);
+        wxMessageBox(message, _L("3T3D Slicer - Switching language failed"), wxOK | wxICON_ERROR);
         if (initial)
 			std::exit(EXIT_FAILURE);
 		else
@@ -10382,7 +10325,7 @@ void GUI_App::associate_files(std::wstring extend)
 
     std::wstring prog_path = L"\"" + std::wstring(app_path) + L"\"";
     std::wstring prog_id = L" Orca.Slicer.1";
-    std::wstring prog_desc = L"OrcaSlicer";
+    std::wstring prog_desc = L"3T3D Slicer";
     std::wstring prog_command = prog_path + L" \"%1\"";
     std::wstring reg_base = L"Software\\Classes";
     std::wstring reg_extension = reg_base + L"\\." + extend;
@@ -10409,7 +10352,7 @@ void GUI_App::disassociate_files(std::wstring extend)
 
     std::wstring prog_path = L"\"" + std::wstring(app_path) + L"\"";
     std::wstring prog_id = L" Orca.Slicer.1";
-    std::wstring prog_desc = L"OrcaSlicer";
+    std::wstring prog_desc = L"3T3D Slicer";
     std::wstring prog_command = prog_path + L" \"%1\"";
     std::wstring reg_base = L"Software\\Classes";
     std::wstring reg_extension = reg_base + L"\\." + extend;

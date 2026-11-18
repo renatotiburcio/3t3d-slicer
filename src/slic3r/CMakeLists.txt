@@ -802,6 +802,8 @@ set(SLIC3R_GUI_SOURCES
     Utils/NetworkAgent.hpp
     Utils/NetworkAgentFactory.hpp
     Utils/NetworkAgentFactory.cpp
+    Utils/AnycubicWorkbenchState.cpp
+    Utils/AnycubicWorkbenchState.hpp
     Utils/ICloudServiceAgent.hpp
     Utils/IPrinterAgent.hpp
     Utils/ICameraSignalingChannel.hpp

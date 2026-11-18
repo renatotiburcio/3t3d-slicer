@@ -23,6 +23,7 @@ add_executable(${_TEST_NAME}_tests
     # The vertex that stands for a role when the solid model takes the toolpaths' colours.
     test_libvgcode_sampling.cpp
     test_device_progress.cpp
+    test_anycubic_workbench_state.cpp
     test_device_manager_integration.cpp
     test_web_media_controller.cpp
     test_scene_raycaster.cpp
