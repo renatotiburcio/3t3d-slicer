@@ -1,0 +1,9 @@
+{
+	"type": "filament",
+	"name": "3D Lab ABS @System",
+	"inherits": "3D Lab ABS @base",
+	"from": "system",
+	"setting_id": "fbUWacCwrZaGQ70Z",
+	"instantiation": "true",
+	"compatible_printers": []
+}

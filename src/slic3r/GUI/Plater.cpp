@@ -6995,7 +6995,9 @@ void Sidebar::update_printer_thumbnail()
         } catch (...) {}
         */
 
-        // Orca: try to use the printer model cover as the thumbnail
+        // Try to use the printer model cover as the thumbnail. Do not cache a
+        // placeholder: profiles may finish loading after the sidebar is first
+        // painted, and a cached placeholder would hide the real cover forever.
         const auto model_name = selected_preset.config.opt_string("printer_model");
         std::string cover_file = model_name + "_cover.png";
         for (auto vendor_profile : preset_bundle->vendors) {
@@ -7015,8 +7017,23 @@ void Sidebar::update_printer_thumbnail()
                 }
             }
         }
+
+        // A vendor profile can be present in the selected preset before its
+        // model list has been rebuilt. Keep the bundled cover discoverable by
+        // model name in that transient state as well.
+        if (!model_name.empty()) {
+            const boost::filesystem::path cover_path = boost::filesystem::absolute(
+                boost::filesystem::path(resources_dir()) / "profiles" / "Anycubic" / cover_file).make_preferred();
+            if (boost::filesystem::exists(cover_path)) {
+                try {
+                    p->image_printer->SetBitmap(create_scaled_bitmap(cover_path.string(), this, PRINTER_THUMBNAIL_SIZE.GetHeight()));
+                    printer_thumbnails[printer_type] = cover_path.string();
+                    return;
+                } catch (...) {}
+            }
+        }
+
         p->image_printer->SetBitmap(create_scaled_bitmap("printer_placeholder", this, PRINTER_THUMBNAIL_SIZE.GetHeight()));
-        printer_thumbnails[printer_type] = "printer_placeholder"; // Avoid unnecessary try
     }
 }
 
@@ -14794,7 +14811,7 @@ void Plater::priv::set_project_name(const wxString& project_name)
     if (!m_project_name.IsEmpty())
         wxGetApp().mainframe->update_title_colour_after_set_title();
 #else
-    wxGetApp().mainframe->SetTitle(m_project_name + " - OrcaSlicer");
+    wxGetApp().mainframe->SetTitle(m_project_name + " - 3T3D Slicer");
     wxGetApp().mainframe->topbar()->SetTitle(m_project_name);
 #endif
 }
@@ -14814,7 +14831,7 @@ void Plater::priv::update_title_dirty_status()
     wxGetApp().mainframe->SetTitle(title);
     wxGetApp().mainframe->update_title_colour_after_set_title();
 #else
-    wxGetApp().mainframe->SetTitle(title + " - OrcaSlicer");
+    wxGetApp().mainframe->SetTitle(title + " - 3T3D Slicer");
     wxGetApp().mainframe->topbar()->SetTitle(title);
 #endif    
 }

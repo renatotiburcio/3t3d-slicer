@@ -1,6 +1,6 @@
 {
 	"name": "OrcaFilamentLibrary",
-	"version": "02.04.00.26",
+	"version": "02.04.00.28",
 	"force_update": "0",
 	"description": "Orca Filament Library",
 	"filament_list": [
@@ -101,6 +101,10 @@
 			"sub_path": "filament/FusRock/FusRock ABS-GF @System.json"
 		},
 		{
+			"name": "3D Lab ABS @base",
+			"sub_path": "filament/3D Lab/3D Lab ABS @base.json"
+		},
+		{
 			"name": "BETA ABS @base",
 			"sub_path": "filament/BETA/BETA ABS @base.json"
 		},
@@ -125,6 +129,14 @@
 			"sub_path": "filament/COEX/COEX ABS PRIME @base.json"
 		},
 		{
+			"name": "Cliever ABS @base",
+			"sub_path": "filament/Cliever/Cliever ABS @base.json"
+		},
+		{
+			"name": "Creality ABS @base",
+			"sub_path": "filament/Creality/Creality ABS @base.json"
+		},
+		{
 			"name": "DREMC ABS @base",
 			"sub_path": "filament/DREMC/DREMC ABS @base.json"
 		},
@@ -143,6 +155,10 @@
 		{
 			"name": "Eolas Prints ABS @System",
 			"sub_path": "filament/Eolas Prints/Eolas Prints ABS @System.json"
+		},
+		{
+			"name": "F3D ABS Premium @base",
+			"sub_path": "filament/F3D/F3D ABS Premium @base.json"
 		},
 		{
 			"name": "FDplast ABS @base",
@@ -175,6 +191,14 @@
 		{
 			"name": "Recycling Fabrik rABS @base",
 			"sub_path": "filament/Recycling Fabrik/Recycling Fabrik rABS @base.json"
+		},
+		{
+			"name": "Voolt ABS @base",
+			"sub_path": "filament/Voolt/Voolt ABS @base.json"
+		},
+		{
+			"name": "eSUN ABS @base",
+			"sub_path": "filament/eSUN/eSUN ABS @base.json"
 		},
 		{
 			"name": "BETA ASA @base",
@@ -429,6 +453,10 @@
 			"sub_path": "filament/Generic PE-CF @base.json"
 		},
 		{
+			"name": "3D Lab PETG @base",
+			"sub_path": "filament/3D Lab/3D Lab PETG @base.json"
+		},
+		{
 			"name": "3D-Fuel PET CF @base",
 			"sub_path": "filament/3D-Fuel/3D-Fuel PET CF @base.json"
 		},
@@ -529,6 +557,14 @@
 			"sub_path": "filament/COEX/COEX PETG @base.json"
 		},
 		{
+			"name": "Cliever PETG @base",
+			"sub_path": "filament/Cliever/Cliever PETG @base.json"
+		},
+		{
+			"name": "Creality PETG @base",
+			"sub_path": "filament/Creality/Creality PETG @base.json"
+		},
+		{
 			"name": "DREMC PET-CF @base",
 			"sub_path": "filament/DREMC/DREMC PET-CF @base.json"
 		},
@@ -559,6 +595,10 @@
 		{
 			"name": "EverLoop rPETG Premium @base",
 			"sub_path": "filament/EverLoop/EverLoop rPETG Premium @base.json"
+		},
+		{
+			"name": "F3D PETG @base",
+			"sub_path": "filament/F3D/F3D PETG @base.json"
 		},
 		{
 			"name": "FDplast PETG @base",
@@ -657,12 +697,20 @@
 			"sub_path": "filament/SchoolHouseSpools/School House Spools Transparent PETG @base.json"
 		},
 		{
+			"name": "Voolt PETG @base",
+			"sub_path": "filament/Voolt/Voolt PETG @base.json"
+		},
+		{
 			"name": "eSUN PETG @base",
 			"sub_path": "filament/eSUN/eSUN PETG @base.json"
 		},
 		{
 			"name": "Generic PHA @System",
 			"sub_path": "filament/Generic PHA @System.json"
+		},
+		{
+			"name": "3D Lab PLA @base",
+			"sub_path": "filament/3D Lab/3D Lab PLA @base.json"
 		},
 		{
 			"name": "3D-Fuel Standard PLA @base",
@@ -865,6 +913,22 @@
 			"sub_path": "filament/COEX/COEX PLA PRIME @base.json"
 		},
 		{
+			"name": "Cliever PLA @base",
+			"sub_path": "filament/Cliever/Cliever PLA @base.json"
+		},
+		{
+			"name": "Creality Hyper PLA @base",
+			"sub_path": "filament/Creality/Creality Hyper PLA @base.json"
+		},
+		{
+			"name": "Creality PLA @base",
+			"sub_path": "filament/Creality/Creality PLA @base.json"
+		},
+		{
+			"name": "Creality PLA-CF @base",
+			"sub_path": "filament/Creality/Creality PLA-CF @base.json"
+		},
+		{
 			"name": "DREMC PLA+ @base",
 			"sub_path": "filament/DREMC/DREMC PLA+ @base.json"
 		},
@@ -927,6 +991,18 @@
 		{
 			"name": "EverLoop rPLA Premium Matte @base",
 			"sub_path": "filament/EverLoop/EverLoop rPLA Premium Matte @base.json"
+		},
+		{
+			"name": "F3D PLA Fibra de Carbono @base",
+			"sub_path": "filament/F3D/F3D PLA Fibra de Carbono @base.json"
+		},
+		{
+			"name": "F3D PLA High Speed @base",
+			"sub_path": "filament/F3D/F3D PLA High Speed @base.json"
+		},
+		{
+			"name": "F3D PLA Premium @base",
+			"sub_path": "filament/F3D/F3D PLA Premium @base.json"
 		},
 		{
 			"name": "FDplast PLA @base",
@@ -1225,12 +1301,24 @@
 			"sub_path": "filament/Valment/Valment PLA-CF @base.json"
 		},
 		{
+			"name": "Voolt PLA @base",
+			"sub_path": "filament/Voolt/Voolt PLA @base.json"
+		},
+		{
+			"name": "eSUN PLA @base",
+			"sub_path": "filament/eSUN/eSUN PLA @base.json"
+		},
+		{
 			"name": "eSUN PLA+ @base",
 			"sub_path": "filament/eSUN/eSUN PLA+ @base.json"
 		},
 		{
 			"name": "eSUN PLA-Basic @base",
 			"sub_path": "filament/eSUN/eSUN PLA-Basic @base.json"
+		},
+		{
+			"name": "eSUN PLA-CF @base",
+			"sub_path": "filament/eSUN/eSUN PLA-CF @base.json"
 		},
 		{
 			"name": "eSUN PLA-Marble @base",
@@ -1421,6 +1509,10 @@
 			"sub_path": "filament/FusRock/BBL/FusRock ABS-GF @BBL X1C.json"
 		},
 		{
+			"name": "3D Lab ABS @System",
+			"sub_path": "filament/3D Lab/3D Lab ABS @System.json"
+		},
+		{
 			"name": "BETA ABS @BBL A1",
 			"sub_path": "filament/BETA/BBL/BETA ABS @BBL A1.json"
 		},
@@ -1489,6 +1581,14 @@
 			"sub_path": "filament/COEX/COEX ABS PRIME @System.json"
 		},
 		{
+			"name": "Cliever ABS @System",
+			"sub_path": "filament/Cliever/Cliever ABS @System.json"
+		},
+		{
+			"name": "Creality ABS @System",
+			"sub_path": "filament/Creality/Creality ABS @System.json"
+		},
+		{
 			"name": "DREMC ABS @System",
 			"sub_path": "filament/DREMC/DREMC ABS @System.json"
 		},
@@ -1503,6 +1603,10 @@
 		{
 			"name": "Elegoo ABS @System",
 			"sub_path": "filament/Elegoo/Elegoo ABS @System.json"
+		},
+		{
+			"name": "F3D ABS Premium @System",
+			"sub_path": "filament/F3D/F3D ABS Premium @System.json"
 		},
 		{
 			"name": "FDplast ABS @System",
@@ -1535,6 +1639,14 @@
 		{
 			"name": "Recycling Fabrik rABS @System",
 			"sub_path": "filament/Recycling Fabrik/Recycling Fabrik rABS @System.json"
+		},
+		{
+			"name": "Voolt ABS @System",
+			"sub_path": "filament/Voolt/Voolt ABS @System.json"
+		},
+		{
+			"name": "eSUN ABS @System",
+			"sub_path": "filament/eSUN/eSUN ABS @System.json"
 		},
 		{
 			"name": "BETA ASA @BBL A1 0.4 nozzle",
@@ -1885,6 +1997,10 @@
 			"sub_path": "filament/Generic PE-CF @System.json"
 		},
 		{
+			"name": "3D Lab PETG @System",
+			"sub_path": "filament/3D Lab/3D Lab PETG @System.json"
+		},
+		{
 			"name": "3D-Fuel PET CF @System",
 			"sub_path": "filament/3D-Fuel/3D-Fuel PET CF @System.json"
 		},
@@ -2197,6 +2313,14 @@
 			"sub_path": "filament/COEX/COEX PETG @System.json"
 		},
 		{
+			"name": "Cliever PETG @System",
+			"sub_path": "filament/Cliever/Cliever PETG @System.json"
+		},
+		{
+			"name": "Creality PETG @System",
+			"sub_path": "filament/Creality/Creality PETG @System.json"
+		},
+		{
 			"name": "DREMC PET-CF @System",
 			"sub_path": "filament/DREMC/DREMC PET-CF @System.json"
 		},
@@ -2243,6 +2367,10 @@
 		{
 			"name": "EverLoop rPETG Premium @System",
 			"sub_path": "filament/EverLoop/EverLoop rPETG Premium @System.json"
+		},
+		{
+			"name": "F3D PETG @System",
+			"sub_path": "filament/F3D/F3D PETG @System.json"
 		},
 		{
 			"name": "FDplast PETG @System",
@@ -2533,12 +2661,20 @@
 			"sub_path": "filament/SchoolHouseSpools/School House Spools Transparent PETG @System.json"
 		},
 		{
+			"name": "Voolt PETG @System",
+			"sub_path": "filament/Voolt/Voolt PETG @System.json"
+		},
+		{
 			"name": "eSUN PETG @System",
 			"sub_path": "filament/eSUN/eSUN PETG @System.json"
 		},
 		{
 			"name": "Goofoo PHA @base",
 			"sub_path": "filament/Goofoo/Goofoo PHA @base.json"
+		},
+		{
+			"name": "3D Lab PLA @System",
+			"sub_path": "filament/3D Lab/3D Lab PLA @System.json"
 		},
 		{
 			"name": "3D-Fuel Standard PLA @System",
@@ -3145,6 +3281,22 @@
 			"sub_path": "filament/COEX/COEX PLA PRIME @System.json"
 		},
 		{
+			"name": "Cliever PLA @System",
+			"sub_path": "filament/Cliever/Cliever PLA @System.json"
+		},
+		{
+			"name": "Creality Hyper PLA @System",
+			"sub_path": "filament/Creality/Creality Hyper PLA @System.json"
+		},
+		{
+			"name": "Creality PLA @System",
+			"sub_path": "filament/Creality/Creality PLA @System.json"
+		},
+		{
+			"name": "Creality PLA-CF @System",
+			"sub_path": "filament/Creality/Creality PLA-CF @System.json"
+		},
+		{
 			"name": "DREMC PLA+ @System",
 			"sub_path": "filament/DREMC/DREMC PLA+ @System.json"
 		},
@@ -3223,6 +3375,18 @@
 		{
 			"name": "EverLoop rPLA Premium Matte @System",
 			"sub_path": "filament/EverLoop/EverLoop rPLA Premium Matte @System.json"
+		},
+		{
+			"name": "F3D PLA Fibra de Carbono @System",
+			"sub_path": "filament/F3D/F3D PLA Fibra de Carbono @System.json"
+		},
+		{
+			"name": "F3D PLA High Speed @System",
+			"sub_path": "filament/F3D/F3D PLA High Speed @System.json"
+		},
+		{
+			"name": "F3D PLA Premium @System",
+			"sub_path": "filament/F3D/F3D PLA Premium @System.json"
 		},
 		{
 			"name": "FDplast PLA @System",
@@ -4241,12 +4405,24 @@
 			"sub_path": "filament/Valment/Valment PLA-CF @System.json"
 		},
 		{
+			"name": "Voolt PLA @System",
+			"sub_path": "filament/Voolt/Voolt PLA @System.json"
+		},
+		{
+			"name": "eSUN PLA @System",
+			"sub_path": "filament/eSUN/eSUN PLA @System.json"
+		},
+		{
 			"name": "eSUN PLA+ @System",
 			"sub_path": "filament/eSUN/eSUN PLA+ @System.json"
 		},
 		{
 			"name": "eSUN PLA-Basic @System",
 			"sub_path": "filament/eSUN/eSUN PLA-Basic @System.json"
+		},
+		{
+			"name": "eSUN PLA-CF @System",
+			"sub_path": "filament/eSUN/eSUN PLA-CF @System.json"
 		},
 		{
 			"name": "eSUN PLA-Marble @System",
@@ -4259,6 +4435,10 @@
 		{
 			"name": "COEX PLA+Silk @base",
 			"sub_path": "filament/COEX/COEX PLA+Silk @base.json"
+		},
+		{
+			"name": "F3D PLA Silk @base",
+			"sub_path": "filament/F3D/F3D PLA Silk @base.json"
 		},
 		{
 			"name": "Generic PLA Silk @System",
@@ -5711,6 +5891,10 @@
 		{
 			"name": "COEX PLA+Silk @System",
 			"sub_path": "filament/COEX/COEX PLA+Silk @System.json"
+		},
+		{
+			"name": "F3D PLA Silk @System",
+			"sub_path": "filament/F3D/F3D PLA Silk @System.json"
 		},
 		{
 			"name": "Goofoo PLA Silk @base",

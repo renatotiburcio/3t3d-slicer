@@ -23,7 +23,7 @@ body
 	border: 0;
 	margin: 0;	
 	overflow: hidden;
-	background-color: #fff;
+	background-color: #f4fbfa;
 	font-size: 14px;
 	line-height: 22px;
 }
@@ -74,7 +74,7 @@ body
 {
 	font-size:28px;
 	line-height: 28px;
-	color: #009688;
+	color: #1aa870;
 	padding: 0px 10mm;
 }
 
@@ -115,7 +115,7 @@ body
 /*---HyperLink---*/
 .HyperLink
 {
-	color: #009688;
+	color: #1aa870;
 	text-decoration: underline;
     font-weight: 700;
 	cursor: pointer;

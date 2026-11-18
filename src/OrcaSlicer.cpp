@@ -6748,7 +6748,8 @@ int CLI::run(int argc, char **argv)
                             if (is_mixed_opt && components_opt && has_any_mixed_filament(is_mixed_opt->values)) {
                                 const auto &is_mixed   = is_mixed_opt->values;
                                 const auto &components = components_opt->values;
-                                const size_t num_physical = static_cast<size_t>(filament_count) - static_cast<size_t>(std::count(is_mixed.begin(), is_mixed.end(), true));
+                                const size_t mixed_count = static_cast<size_t>(std::count_if(is_mixed.begin(), is_mixed.end(), [](unsigned char value) { return value != 0; }));
+                                const size_t num_physical = static_cast<size_t>(filament_count) - mixed_count;
                                 std::vector<std::string> physical_types(num_physical);
                                 for (size_t f_index = 0; f_index < num_physical; ++f_index) {
                                     std::string displayed_type;

@@ -1,0 +1,9 @@
+{
+	"type": "filament",
+	"name": "Cliever PETG @System",
+	"inherits": "Cliever PETG @base",
+	"from": "system",
+	"setting_id": "SPSo43CWi9mig2EK",
+	"instantiation": "true",
+	"compatible_printers": []
+}

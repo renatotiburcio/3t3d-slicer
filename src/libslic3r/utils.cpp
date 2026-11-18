@@ -3,6 +3,7 @@
 #include "I18N.hpp"
 
 #include <atomic>
+#include <array>
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/keywords/severity.hpp>
@@ -2064,6 +2065,26 @@ static bool cache_covers(const Semver& cache_ver, const Semver& profile_ver)
 bool is_vendor_installed(const std::string& vendor)
 {
     const boost::filesystem::path dir = boost::filesystem::path(data_dir()) / PRESET_SYSTEM_DIR;
+    // A legacy Anycubic manifest may survive an upgrade without the machine
+    // files introduced by the newer bundle. Treat that state as not installed
+    // so apply_vendor_config copies the complete bundled profile instead of
+    // accepting a filament-only tree and leaving the printer preset absent.
+    if (vendor == "Anycubic" && boost::filesystem::exists(dir / "Anycubic.json")) {
+        const boost::filesystem::path anycubic_dir = dir / "Anycubic";
+        const std::array<boost::filesystem::path, 5> required_files = {
+            anycubic_dir / "machine" / "Anycubic Kobra 4.json",
+            anycubic_dir / "machine" / "Anycubic Kobra 4 0.4 nozzle.json",
+            anycubic_dir / "machine" / "Anycubic Kobra 4 Combo.json",
+            anycubic_dir / "machine" / "Anycubic Kobra 4 Combo 0.4 nozzle.json",
+            anycubic_dir / "process" / "0.20mm Standard @Anycubic Kobra 4 0.4 nozzle.json"
+        };
+        for (const auto& required : required_files)
+            if (!boost::filesystem::exists(required) || boost::filesystem::file_size(required) == 0) {
+                BOOST_LOG_TRIVIAL(warning) << "is_vendor_installed: incomplete Anycubic profile tree; "
+                                           << "bundled installation will be requested";
+                return false;
+            }
+    }
     // A cache is the whole of a cache-only installation, so a file this build
     // cannot serve the vendor from is not an installation. Left counted as one,
     // the updater would never lay a working copy down.

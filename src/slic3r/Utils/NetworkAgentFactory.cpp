@@ -210,8 +210,21 @@ std::unique_ptr<NetworkAgent> create_agent_from_config(const std::string& log_di
     if (!app_config)
         return std::make_unique<NetworkAgent>(nullptr, nullptr);
 
-    // Always create Orca cloud agent as the primary provider
-    auto cloud_agent = NetworkAgentFactory::create_cloud_agent(ORCA_CLOUD_PROVIDER, log_dir);
+    std::string primary_provider = app_config->get("cloud_provider");
+    const bool cloud_disabled = primary_provider == "none";
+    if (cloud_disabled) {
+        BOOST_LOG_TRIVIAL(info) << "Cloud connection disabled by user";
+    } else if (primary_provider != ORCA_CLOUD_PROVIDER && primary_provider != BBL_CLOUD_PROVIDER) {
+        if (primary_provider == ANYCUBIC_CLOUD_PROVIDER)
+            BOOST_LOG_TRIVIAL(warning) << "Anycubic Cloud selected, but no adapter is installed; using 3T3D Cloud";
+        primary_provider = ORCA_CLOUD_PROVIDER;
+    }
+    auto cloud_agent = cloud_disabled ? nullptr : NetworkAgentFactory::create_cloud_agent(primary_provider, log_dir);
+    if (!cloud_agent && primary_provider != ORCA_CLOUD_PROVIDER) {
+        BOOST_LOG_TRIVIAL(warning) << "Could not create selected cloud provider " << primary_provider << "; falling back to 3T3D Cloud";
+        primary_provider = ORCA_CLOUD_PROVIDER;
+        cloud_agent = NetworkAgentFactory::create_cloud_agent(primary_provider, log_dir);
+    }
     if (!cloud_agent) {
         BOOST_LOG_TRIVIAL(error) << "Failed to create cloud agent";
     }
@@ -226,9 +239,9 @@ std::unique_ptr<NetworkAgent> create_agent_from_config(const std::string& log_di
         }
 
         // Initialize third-party cloud agents from config
-        auto providers = app_config->get_cloud_providers();
+        auto providers = cloud_disabled ? std::vector<std::string>() : app_config->get_cloud_providers();
         for (const auto& provider : providers) {
-            if (provider == ORCA_CLOUD_PROVIDER)
+            if (provider == primary_provider)
                 continue; // Primary agent already created above
             auto third_party_agent = NetworkAgentFactory::create_cloud_agent(provider, log_dir);
             if (third_party_agent) {

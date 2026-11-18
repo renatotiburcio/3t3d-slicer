@@ -511,7 +511,7 @@ DPIFrame(NULL, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, BORDERLESS_FRAME_
     default:
     case GUI_App::EAppMode::Editor:
         m_taskbar_icon = std::make_unique<OrcaSlicerTaskBarIcon>(wxTBI_DOCK);
-        m_taskbar_icon->SetIcon(wxIcon(Slic3r::var("OrcaSlicer-mac_256px.ico"), wxBITMAP_TYPE_ICO), "OrcaSlicer");
+        m_taskbar_icon->SetIcon(wxIcon(Slic3r::var("OrcaSlicer-mac_256px.ico"), wxBITMAP_TYPE_ICO), "3T3D Slicer");
         break;
     case GUI_App::EAppMode::GCodeViewer:
         break;
@@ -1244,14 +1244,8 @@ void MainFrame::update_layout()
         // append instead, and by now the other built-in tabs are already in place).
         const int home_idx = m_tabpanel->FindPageByName(TAB_ID_HOME);
         size_t prepare_pos = (home_idx == wxNOT_FOUND) ? 0 : static_cast<size_t>(home_idx) + 1;
-#ifdef SLIC3R_CAD
-        // Design sits between Home and Prepare, so it goes in first and pushes Prepare along.
-        // The page only exists when the experimental CAD feature is enabled.
-        if (m_design_page != nullptr) {
-            m_design_page->Reparent(m_tabpanel);
-            m_tabpanel->InsertPage(prepare_pos++, TAB_ID_DESIGN, m_design_page, _L("Design"), "tab_design_active");
-        }
-#endif
+        // 3T3D intentionally excludes the optional CAD/Design workspace from
+        // the product navigation. The remaining pages are independent of it.
         m_tabpanel->InsertPage(prepare_pos, TAB_ID_PREPARE, m_plater, _L("Prepare"), "tab_3d_active");
         m_tabpanel->InsertPage(prepare_pos + 1, TAB_ID_PREVIEW, m_plater, _L("Preview"), "tab_preview_active");
         m_main_sizer->Add(m_tabpanel, 1, wxEXPAND | wxTOP, 0);
@@ -1598,12 +1592,7 @@ void MainFrame::init_tabpanel() {
     // created, so the tab does not appear at all (the preference takes effect on the next
     // start, like the other feature toggles). Nor in the G-code viewer, which has no Design tab to put
     // it in — and no business opening a control socket onto one.
-    if (wxGetApp().is_enable_cad_feature() && wxGetApp().is_editor()) {
-        // Experimental and heavy enough that building it unasked would cost more than it saves.
-        m_design_page = new LazyPage<DesignPanel>(this, TAB_ID_DESIGN, -1);
-        m_lazy_pages.push_back(m_design_page);
-        start_mcp_control_if_enabled();   // opens the MCP socket iff ORCA_CAD_MCP is set
-    }
+    // 3T3D excludes the optional CAD/Design workspace from the product.
 #endif
 
     create_preset_tabs();

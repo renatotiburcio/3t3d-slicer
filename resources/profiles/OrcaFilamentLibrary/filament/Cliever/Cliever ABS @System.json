@@ -1,0 +1,9 @@
+{
+	"type": "filament",
+	"name": "Cliever ABS @System",
+	"inherits": "Cliever ABS @base",
+	"from": "system",
+	"setting_id": "c8Y6CCaKpdNnoXC0",
+	"instantiation": "true",
+	"compatible_printers": []
+}

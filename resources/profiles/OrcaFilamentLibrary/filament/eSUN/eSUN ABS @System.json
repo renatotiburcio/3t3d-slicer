@@ -1,0 +1,9 @@
+{
+	"type": "filament",
+	"name": "eSUN ABS @System",
+	"inherits": "eSUN ABS @base",
+	"from": "system",
+	"setting_id": "XN8KJHRLpIjGoUBB",
+	"instantiation": "true",
+	"compatible_printers": []
+}

@@ -1,0 +1,9 @@
+{
+	"type": "filament",
+	"name": "Voolt ABS @System",
+	"inherits": "Voolt ABS @base",
+	"from": "system",
+	"setting_id": "zQM5hB36TVQxWOoB",
+	"instantiation": "true",
+	"compatible_printers": []
+}

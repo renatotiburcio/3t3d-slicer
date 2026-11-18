@@ -1,0 +1,9 @@
+{
+	"type": "filament",
+	"name": "3D Lab PETG @System",
+	"inherits": "3D Lab PETG @base",
+	"from": "system",
+	"setting_id": "Tgeq8iRtkjmVUuPj",
+	"instantiation": "true",
+	"compatible_printers": []
+}

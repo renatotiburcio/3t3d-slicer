@@ -1905,7 +1905,7 @@ bool DynamicConfig::read_cli(int argc, const char* const argv[], t_config_option
                 bool deserialized = false;
                 try {
                     deserialized = opt_vector->deserialize(vector_value, true);
-                } catch (const std::exception &ex) {
+                } catch (const std::exception &) {
                     // e.g. "nil" deserialized into a non-nullable vector option throws instead of
                     // returning false - treat that the same as any other invalid value here.
                     deserialized = false;

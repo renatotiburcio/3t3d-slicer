@@ -1,0 +1,9 @@
+{
+	"type": "filament",
+	"name": "Voolt PLA @System",
+	"inherits": "Voolt PLA @base",
+	"from": "system",
+	"setting_id": "QPk9ZaXUr5Ff2OAD",
+	"instantiation": "true",
+	"compatible_printers": []
+}

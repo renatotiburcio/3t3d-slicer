@@ -126,6 +126,14 @@ function HandleModelList( pVal )
 		}
 	}
 
+	// 3T3D default: offer the bundled Anycubic Kobra 4 on first setup when
+	// no printer was preselected. Users can still deselect it or choose others.
+	if($('.ModelCheckBoxSelected').length == 0) {
+		const kobra4 = pModel.find(i => i.vendor == 'Anycubic' && i.model == 'Anycubic Kobra 4');
+		if(kobra4)
+			ChooseModel(kobra4.vendor, kobra4.model);
+	}
+
 	UpdateSidebarVendors();
 
 	// let AlreadySelect=$(".ModelCheckBoxSelected");
@@ -207,7 +215,8 @@ function FilterModelList(keyword) {
 		let OneModel = pModel[n];
 
 		let strVendor = OneModel['vendor'];
-		let search = (OneModel['name'] + '\0' + strVendor).toLowerCase();
+		let displayName = GetPrinterDisplayName(OneModel['name'], strVendor);
+		let search = (OneModel['name'] + '\0' + displayName + '\0' + strVendor).toLowerCase();
 
 		if (!kwSplit.every(s => search.includes(s)))
 			continue;
@@ -293,7 +302,7 @@ function CreatePrinterBlock(OneModel)
 {
 	let vendor = OneModel['vendor']
 	let vendorName = vendor=="BBL" ? "Bambu Lab" : vendor=="Custom" ? "Generic Printer" : vendor;
-	let modelName  = OneModel['name'];
+	let modelName  = GetPrinterDisplayName(OneModel['name'], vendor);
 
 	// Most of it unneeded. this can be applied in profiles
 	if( vendor=="Custom")					
@@ -323,6 +332,15 @@ function CreatePrinterBlock(OneModel)
 			'		<div class="PName">'+ modelName +'</div>'+ // ><p>'+ vendorName +'</p>
 			'	</div>'+
 			'</div>';
+}
+
+// Keep the bundled profile identifiers compatible with existing projects while
+// presenting the product name used by the Kobra 4 Combo in the user interface.
+function GetPrinterDisplayName(modelName, vendor)
+{
+	if(vendor == "Anycubic" && modelName == "Anycubic Kobra 4")
+		return "Anycubic Kobra 4 Combo";
+	return modelName;
 }
 
 function scrollToVendor(vendor) {

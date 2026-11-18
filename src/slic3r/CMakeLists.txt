@@ -989,6 +989,9 @@ endif ()
 
 if (MSVC)
     target_link_libraries(libslic3r_gui Setupapi.lib)
+    # wxWidgets 3.2 emits a false-positive division-by-zero warning from its
+    # MSW GDI header. Keep the third-party warning out of the project build.
+    target_compile_options(libslic3r_gui PRIVATE /wd4723)
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     FIND_LIBRARY(WAYLAND_SERVER_LIBRARIES NAMES wayland-server)
     FIND_LIBRARY(WAYLAND_EGL_LIBRARIES    NAMES wayland-egl)

@@ -1,0 +1,9 @@
+{
+	"type": "filament",
+	"name": "3D Lab PLA @System",
+	"inherits": "3D Lab PLA @base",
+	"from": "system",
+	"setting_id": "6GyNOU2ZgFwXspW8",
+	"instantiation": "true",
+	"compatible_printers": []
+}

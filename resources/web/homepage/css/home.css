@@ -1147,3 +1147,4 @@ body.cloud-mode #LeftBoard
 	cursor: pointer!important;
 	pointer-events: auto!important;
 }
+#LoginArea { display: none !important; }

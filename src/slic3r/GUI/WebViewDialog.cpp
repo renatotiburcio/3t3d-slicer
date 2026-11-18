@@ -884,21 +884,14 @@ void WebViewPanel::ShowNetpluginTip()
 
 void WebViewPanel::SendCloudProvidersInfo()
 {
-    auto* app_config = wxGetApp().app_config;
-    if (!app_config)
-        return;
-
+    // Cloud accounts are intentionally not part of the 3T3D user interface.
+    // Keep this notification for compatibility with older homepage bundles,
+    // but always send an empty provider list so stale configuration cannot
+    // resurrect a login row or cloud sidebar.
     json j;
     j["command"] = "cloud_providers_info";
     json data;
     json provider_array = json::array();
-
-    if (!app_config->get_hide_login_side_panel()) {
-        auto providers = app_config->get_cloud_providers();
-        for (const auto& p : providers) {
-            provider_array.push_back(p);
-        }
-    }
 
     data["providers"] = provider_array;
     j["data"] = data;

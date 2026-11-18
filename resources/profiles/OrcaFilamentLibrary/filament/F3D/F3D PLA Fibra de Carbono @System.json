@@ -1,0 +1,9 @@
+{
+	"type": "filament",
+	"name": "F3D PLA Fibra de Carbono @System",
+	"inherits": "F3D PLA Fibra de Carbono @base",
+	"from": "system",
+	"setting_id": "gcTSJr9xKS66I21A",
+	"instantiation": "true",
+	"compatible_printers": []
+}

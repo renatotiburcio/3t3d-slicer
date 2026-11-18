@@ -1807,13 +1807,6 @@ void PreferencesDialog::create_items()
     auto item_multi_machine    = create_item_checkbox(_L("Multi device management"), _L("With this option enabled, you can send a task to multiple devices at the same time and manage multiple devices."), "enable_multi_machine", _L("(Requires restart)"));
     g_sizer->Add(item_multi_machine);
 
-#ifdef SLIC3R_CAD
-    auto item_cad_feature      = create_item_checkbox(_L("CAD feature (experimental)"),
-        _L("With this option enabled, the Design tab is shown, where models can be built and edited "
-           "parametrically. This feature is experimental and still under development."),
-        "enable_cad_feature", _L("(Requires restart)"));
-    g_sizer->Add(item_cad_feature);
-#endif
 
 #if 0
     g_sizer->Add(create_item_title(_L("Filament Grouping")), 1, wxEXPAND);

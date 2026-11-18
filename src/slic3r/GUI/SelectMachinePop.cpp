@@ -361,16 +361,14 @@ SelectMachinePopup::SelectMachinePopup(wxWindow *parent)
     m_scrolledWindow->Layout();
     m_sizxer_scrolledWindow->Fit(m_scrolledWindow);
 
-#if defined(__WINDOWS__)
 	m_sizer_search_bar = new wxBoxSizer(wxVERTICAL);
 	m_search_bar = new wxSearchCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxNO_BORDER );
-	m_search_bar->SetDescriptiveText(_L("Search"));
+	m_search_bar->SetDescriptiveText(_L("Pesquisar impressora"));
 	m_search_bar->ShowSearchButton( true );
 	m_search_bar->ShowCancelButton( false );
 	m_sizer_search_bar->Add( m_search_bar, 1, wxALL| wxEXPAND, 1 );
 	m_sizer_main->Add(m_sizer_search_bar, 0, wxTOP | wxRIGHT | wxLEFT | wxEXPAND, FromDIP(1));
 	m_search_bar->Bind( wxEVT_COMMAND_TEXT_UPDATED, &SelectMachinePopup::update_machine_list, this );
-#endif
     auto own_title        = create_title_panel(_L("My Device"));
     m_sizer_my_devices    = new wxBoxSizer(wxVERTICAL);
     auto other_title      = create_title_panel(_L("Other Device"));
@@ -445,6 +443,13 @@ void SelectMachinePopup::Popup(wxWindow *WXUNUSED(focus))
         user_event.SetEventObject(this);
         wxPostEvent(this, user_event);
     }
+
+    // Populate synchronously before showing the popup. Posting the refresh
+    // event alone can leave the first opening blank because the popup starts
+    // its nested event loop before that queued event is dispatched. The event
+    // remains in place for asynchronous discovery and cloud updates.
+    update_user_devices();
+    update_other_devices();
 
     PopupWindow::Popup();
 }
@@ -564,16 +569,12 @@ void SelectMachinePopup::update_other_devices()
             m_other_list_machine_panel.push_back(mpanel);
             m_sizer_other_devices->Add(op, 0, wxEXPAND, 0);
         }
-#if defined(__WINDOWS__)
         if (!search_for_printer(mobj)) {
             op->Hide();
         }
         else {
             op->Show();
         }
-#else
-        op->Show();
-#endif
         i++;
 
         op->update_machine_info(mobj);
@@ -631,7 +632,7 @@ void SelectMachinePopup::update_other_devices()
     wxBoxSizer* placeholder_sizer = new wxBoxSizer(wxVERTICAL);
 
     // ORCA standardized HyperLink
-    m_hyperlink = new HyperLink(m_placeholder_panel, _L("Can\'t find devices\?"), wxT("https://www.orcaslicer.com/wiki/")); // Orca: neutral wiki link (vendor URL removed)
+    m_hyperlink = new HyperLink(m_placeholder_panel, _L("Não encontrou sua impressora?"), wxEmptyString);
     m_hyperlink->SetFont(::Label::Body_12);
     placeholder_sizer->Add(m_hyperlink, 0, wxALIGN_CENTER | wxALL, 5);
 
@@ -692,15 +693,11 @@ void SelectMachinePopup::update_user_devices()
         MachineObjectPanel* op = nullptr;
         if (i < m_user_list_machine_panel.size()) {
             op = m_user_list_machine_panel[i]->mPanel;
-#if defined(__WINDOWS__)
 			if (!search_for_printer(mobj)) {
 				op->Hide();
 			} else {
                 op->Show();
             }
-#else
-            op->Show();
-#endif
         } else {
             op = new MachineObjectPanel(m_scrolledWindow, wxID_ANY);
             MachinePanel* mpanel = new MachinePanel();
@@ -814,23 +811,24 @@ void SelectMachinePopup::update_user_devices()
 
 bool SelectMachinePopup::search_for_printer(MachineObject* obj)
 {
-	const std::string& search_text = m_search_bar->GetValue().ToStdString();
+	if (!obj || !m_search_bar) {
+		return true;
+	}
+
+    wxString search_text = m_search_bar->GetValue().Lower();
 	if (search_text.empty()) {
 		return true;
 	}
 
-	const auto& name = wxString::FromUTF8(obj->get_dev_name()).ToStdString();
-    const auto& name_it = name.find(search_text);
-    if (name_it != std::string::npos) {
+	const wxString name = wxString::FromUTF8(obj->get_dev_name()).Lower();
+    if (name.Find(search_text) != wxNOT_FOUND) {
         return true;
     }
 
-#if !BBL_RELEASE_TO_PUBLIC
-    const auto& ip_it = obj->get_dev_ip().find(search_text);
-    if (ip_it != std::string::npos) {
+    const wxString ip = wxString::FromUTF8(obj->get_dev_ip()).Lower();
+    if (ip.Find(search_text) != wxNOT_FOUND) {
         return true;
     }
-#endif
 
     return false;
 }
@@ -849,8 +847,16 @@ void SelectMachinePopup::update_machine_list(wxCommandEvent &event)
 
 void SelectMachinePopup::start_ssdp(bool start)
 {
-    return;
-    //if (wxGetApp().getAgent()) { wxGetApp().getAgent()->start_discovery(true, start); }
+    NetworkAgent* agent = wxGetApp().getAgent();
+    if (!agent) {
+        BOOST_LOG_TRIVIAL(debug) << "SelectMachinePopup: network agent unavailable; discovery skipped";
+        return;
+    }
+
+    const bool started = agent->start_discovery(start, false);
+    BOOST_LOG_TRIVIAL(info) << "SelectMachinePopup: printer discovery "
+                            << (start ? "started" : "stopped")
+                            << ", accepted=" << started;
 }
 
 void SelectMachinePopup::OnLeftUp(wxMouseEvent &event)
@@ -899,7 +905,7 @@ void SelectMachinePopup::OnLeftUp(wxMouseEvent &event)
         //hyper link
         auto h_rect = m_hyperlink->ClientToScreen(wxPoint(0, 0));
         if (mouse_pos.x > h_rect.x && mouse_pos.y > h_rect.y && mouse_pos.x < (h_rect.x + m_hyperlink->GetSize().x) && mouse_pos.y < (h_rect.y + m_hyperlink->GetSize().y)) {
-          wxLaunchDefaultBrowser(wxT("https://www.orcaslicer.com/wiki/")); // Orca: neutral wiki link (vendor URL removed)
+          // 3T3D does not redirect the printer selector to the OrcaSlicer wiki.
         }
     }
 }

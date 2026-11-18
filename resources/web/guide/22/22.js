@@ -40,9 +40,19 @@ function ReturnPreviewPage()
 function GotoNetPluginPage()
 {
 	let bRet=ResponseFilamentResult();
-	
-	if(bRet)
-		window.location.href="../4orca/index.html";
+
+	if(!bRet)
+		return;
+
+	// The 3T3D setup flow is local/offline by default. Do not send Anycubic
+	// users through the legacy cloud/stealth page. Bambu's optional LAN plugin
+	// remains available only when a Bambu printer was explicitly selected.
+	let hasBambu = m_ProfileItem && m_ProfileItem.model &&
+		m_ProfileItem.model.some(item => item.vendor == "BBL");
+	if(hasBambu)
+		window.location.href = "../5/index.html";
+	else
+		FinishGuide();
 }
 
 function FinishGuide()

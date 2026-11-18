@@ -1,0 +1,9 @@
+{
+	"type": "filament",
+	"name": "F3D PLA Silk @System",
+	"inherits": "F3D PLA Silk @base",
+	"from": "system",
+	"setting_id": "pRLDb5rob9xVoIKU",
+	"instantiation": "true",
+	"compatible_printers": []
+}

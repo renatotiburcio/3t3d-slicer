@@ -26,41 +26,51 @@ void OrcaPrinterAgent::set_cloud_agent(std::shared_ptr<ICloudServiceAgent> cloud
 }
 
 // ============================================================================
-// Communication - All Stubs
+// Communication
 // ============================================================================
+// This compatibility agent is intentionally not a transport implementation.
+// Returning success here makes the UI report a connected/printed state even
+// though no bytes were sent.  Keep unsupported operations explicit until a
+// real protocol adapter is installed.
 
 int OrcaPrinterAgent::send_message(std::string dev_id, std::string json_str, int qos, int flag)
 {
-    return BAMBU_NETWORK_SUCCESS;
+    (void)dev_id; (void)json_str; (void)qos; (void)flag;
+    return ORCA_NETWORK_ERR_CMD_NOT_SUPPORTED;
 }
 
 int OrcaPrinterAgent::connect_printer(const PrinterConnectionParams& params)
 {
-    return BAMBU_NETWORK_SUCCESS;
+    (void)params;
+    return ORCA_NETWORK_ERR_CMD_NOT_SUPPORTED;
 }
 
 int OrcaPrinterAgent::disconnect_printer()
 {
+    // Disconnect is idempotent even when no transport is installed.
     return BAMBU_NETWORK_SUCCESS;
 }
 
 int OrcaPrinterAgent::send_message_to_printer(std::string dev_id, std::string json_str, int qos, int flag)
 {
-    return BAMBU_NETWORK_SUCCESS;
+    (void)dev_id; (void)json_str; (void)qos; (void)flag;
+    return ORCA_NETWORK_ERR_CMD_NOT_SUPPORTED;
 }
 
 // ============================================================================
-// Discovery - Stub
+// Discovery
 // ============================================================================
 
 bool OrcaPrinterAgent::start_discovery(bool start, bool sending)
 {
-    return true;
+    (void)start; (void)sending;
+    return false;
 }
 
 int OrcaPrinterAgent::bind_detect(std::string dev_ip, std::string sec_link, detectResult& detect)
 {
-    return BAMBU_NETWORK_SUCCESS;
+    (void)dev_ip; (void)sec_link; (void)detect;
+    return ORCA_NETWORK_ERR_CMD_NOT_SUPPORTED;
 }
 
 int OrcaPrinterAgent::set_server_callback(OnServerErrFn fn)
@@ -96,12 +106,13 @@ AgentInfo OrcaPrinterAgent::get_agent_info_static()
 }
 
 // ============================================================================
-// Print Job Operations - All Stubs
+// Print Job Operations
 // ============================================================================
 
 int OrcaPrinterAgent::start_print(PrintParams params, OnUpdateStatusFn update_fn, WasCancelledFn cancel_fn, OnWaitFn wait_fn)
 {
-    return BAMBU_NETWORK_SUCCESS;
+    (void)params; (void)update_fn; (void)cancel_fn; (void)wait_fn;
+    return ORCA_NETWORK_ERR_CMD_NOT_SUPPORTED;
 }
 
 int OrcaPrinterAgent::start_local_print_with_record(PrintParams      params,
@@ -109,22 +120,26 @@ int OrcaPrinterAgent::start_local_print_with_record(PrintParams      params,
                                                     WasCancelledFn   cancel_fn,
                                                     OnWaitFn         wait_fn)
 {
-    return BAMBU_NETWORK_SUCCESS;
+    (void)params; (void)update_fn; (void)cancel_fn; (void)wait_fn;
+    return ORCA_NETWORK_ERR_CMD_NOT_SUPPORTED;
 }
 
 int OrcaPrinterAgent::start_send_gcode_to_sdcard(PrintParams params, OnUpdateStatusFn update_fn, WasCancelledFn cancel_fn, OnWaitFn wait_fn)
 {
-    return BAMBU_NETWORK_SUCCESS;
+    (void)params; (void)update_fn; (void)cancel_fn; (void)wait_fn;
+    return ORCA_NETWORK_ERR_CMD_NOT_SUPPORTED;
 }
 
 int OrcaPrinterAgent::start_local_print(PrintParams params, OnUpdateStatusFn update_fn, WasCancelledFn cancel_fn)
 {
-    return BAMBU_NETWORK_SUCCESS;
+    (void)params; (void)update_fn; (void)cancel_fn;
+    return ORCA_NETWORK_ERR_CMD_NOT_SUPPORTED;
 }
 
 int OrcaPrinterAgent::start_sdcard_print(PrintParams params, OnUpdateStatusFn update_fn, WasCancelledFn cancel_fn)
 {
-    return BAMBU_NETWORK_SUCCESS;
+    (void)params; (void)update_fn; (void)cancel_fn;
+    return ORCA_NETWORK_ERR_CMD_NOT_SUPPORTED;
 }
 
 // ============================================================================

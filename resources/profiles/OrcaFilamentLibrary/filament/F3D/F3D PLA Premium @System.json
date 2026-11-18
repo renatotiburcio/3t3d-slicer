@@ -1,0 +1,9 @@
+{
+	"type": "filament",
+	"name": "F3D PLA Premium @System",
+	"inherits": "F3D PLA Premium @base",
+	"from": "system",
+	"setting_id": "8SfIOniF9cC1Y2iB",
+	"instantiation": "true",
+	"compatible_printers": []
+}

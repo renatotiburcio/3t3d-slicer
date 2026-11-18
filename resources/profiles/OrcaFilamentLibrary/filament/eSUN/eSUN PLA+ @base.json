@@ -5,22 +5,29 @@
 	"from": "system",
 	"filament_id": "OFqINlYj",
 	"instantiation": "false",
-	"filament_cost": [
-		"22.99"
-	],
-	"filament_density": [
-		"1.25"
-	],
-	"filament_flow_ratio": [
-		"0.98"
-	],
-	"filament_max_volumetric_speed": [
-		"12"
-	],
-	"filament_vendor": [
-		"eSUN"
-	],
-	"slow_down_layer_time": [
-		"6"
-	]
+	"cool_plate_temp": ["45"],
+	"cool_plate_temp_initial_layer": ["50"],
+	"eng_plate_temp": ["55"],
+	"eng_plate_temp_initial_layer": ["60"],
+	"fan_cooling_layer_time": ["20"],
+	"fan_max_speed": ["100"],
+	"fan_min_speed": ["60"],
+	"filament_cost": ["21"],
+	"filament_density": ["1.24"],
+	"filament_flow_ratio": ["0.98"],
+	"filament_max_volumetric_speed": ["15"],
+	"filament_type": ["PLA"],
+	"filament_vendor": ["eSUN"],
+	"hot_plate_temp": ["55"],
+	"hot_plate_temp_initial_layer": ["60"],
+	"nozzle_temperature": ["210"],
+	"nozzle_temperature_initial_layer": ["215"],
+	"nozzle_temperature_range_high": ["230"],
+	"nozzle_temperature_range_low": ["200"],
+	"overhang_fan_speed": ["100"],
+	"overhang_fan_threshold": ["10%"],
+	"slow_down_layer_time": ["12"],
+	"textured_plate_temp": ["55"],
+	"textured_plate_temp_initial_layer": ["60"],
+	"temperature_vitrification": ["60"]
 }

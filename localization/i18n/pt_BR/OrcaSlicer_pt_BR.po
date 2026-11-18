@@ -7614,7 +7614,7 @@ msgid "Information"
 msgstr "Informação"
 
 msgid "Loading..."
-msgstr "Carregando…"
+msgstr "Carregando..."
 
 msgid "Year"
 msgstr "Ano"
@@ -13700,6 +13700,30 @@ msgstr "Carregamento em andamento…"
 msgctxt "Printer vendor"
 msgid "Custom"
 msgstr "Personalizado"
+
+msgid "Welcome to 3T3D Slicer"
+msgstr "Bem-vindo ao 3T3D Slicer"
+
+msgid "3T3D Slicer will be set up in several steps. Let's start!"
+msgstr "O 3T3D Slicer será configurado em várias etapas. Vamos começar!"
+
+msgid "Choose your cloud connection"
+msgstr "Escolha sua conexÃ£o em nuvem"
+
+msgid "You can change this later in Settings. Local and offline use remain available."
+msgstr "VocÃª pode alterar isso depois nas configuraÃ§Ãµes. O uso local e offline continua disponÃ­vel."
+
+msgid "3T3D Cloud"
+msgstr "3T3D Cloud"
+
+msgid "Bambu Cloud"
+msgstr "Bambu Cloud"
+
+msgid "Anycubic Cloud (adapter not available yet)"
+msgstr "Anycubic Cloud (adaptador ainda indisponÃ­vel)"
+
+msgid "No cloud connection"
+msgstr "NÃ£o conectar a nenhum serviÃ§o em nuvem"
 
 msgid "Welcome to Orca Slicer"
 msgstr "Bem-vindo ao OrcaSlicer"

@@ -1,6 +1,6 @@
 {
 	"name": "Anycubic",
-	"version": "02.04.00.10",
+	"version": "02.04.00.12",
 	"force_update": "0",
 	"description": "Anycubic configurations",
 	"machine_model_list": [
@@ -51,6 +51,14 @@
 		{
 			"name": "Anycubic Kobra 3 V2",
 			"sub_path": "machine/Anycubic Kobra 3 V2.json"
+		},
+		{
+			"name": "Anycubic Kobra 4",
+			"sub_path": "machine/Anycubic Kobra 4.json"
+		},
+		{
+			"name": "Anycubic Kobra 4 Combo",
+			"sub_path": "machine/Anycubic Kobra 4 Combo.json"
 		},
 		{
 			"name": "Anycubic Kobra Max",
@@ -309,6 +317,10 @@
 		{
 			"name": "0.20mm Standard @Anycubic Kobra 3 V2 0.4 nozzle",
 			"sub_path": "process/0.20mm Standard @Anycubic Kobra 3 V2 0.4 nozzle.json"
+		},
+		{
+			"name": "0.20mm Standard @Anycubic Kobra 4 0.4 nozzle",
+			"sub_path": "process/0.20mm Standard @Anycubic Kobra 4 0.4 nozzle.json"
 		},
 		{
 			"name": "0.20mm Standard @Anycubic Kobra Neo 0.4 nozzle",
@@ -1367,6 +1379,10 @@
 			"sub_path": "machine/Anycubic Kobra 3 V2 0.8 nozzle.json"
 		},
 		{
+			"name": "Anycubic Kobra 4 0.4 nozzle",
+			"sub_path": "machine/Anycubic Kobra 4 0.4 nozzle.json"
+		},
+		{
 			"name": "Anycubic Kobra Max 0.4 nozzle",
 			"sub_path": "machine/Anycubic Kobra Max 0.4 nozzle.json"
 		},
@@ -1413,6 +1429,10 @@
 		{
 			"name": "Anycubic i3 Mega S 0.4 nozzle",
 			"sub_path": "machine/Anycubic i3 Mega S 0.4 nozzle.json"
+		},
+		{
+			"name": "Anycubic Kobra 4 Combo 0.4 nozzle",
+			"sub_path": "machine/Anycubic Kobra 4 Combo 0.4 nozzle.json"
 		}
 	]
 }

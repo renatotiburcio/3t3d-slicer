@@ -1,0 +1,13 @@
+{
+	"type": "machine",
+	"name": "Anycubic Kobra 4 Combo 0.4 nozzle",
+	"inherits": "Anycubic Kobra 4 0.4 nozzle",
+	"from": "system",
+	"setting_id": "RghwtZLaW9Lz0ruz",
+	"instantiation": "true",
+	"printer_settings_id": "Anycubic Kobra 4 Combo 0.4 nozzle",
+	"printer_model": "Anycubic Kobra 4 Combo",
+	"printer_variant": "0.4",
+	"default_print_profile": "0.20mm Standard @Anycubic Kobra 4 0.4 nozzle",
+	"default_filament_profile": ["Generic PLA @System"]
+}

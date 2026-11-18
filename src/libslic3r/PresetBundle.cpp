@@ -3361,9 +3361,13 @@ std::pair<PresetsConfigSubstitutions, std::string> PresetBundle::load_system_pre
 
     // Sorted, so any duplicate-preset warning comes out in the same order on every run.
     std::vector<VendorSource> vendors;
-    for (const std::string& name : vendor_names_in(dir))
-        if (name == ORCA_FILAMENT_LIBRARY || !(validation_mode && !vendor_to_validate.empty() && name != vendor_to_validate))
+    for (const std::string& name : vendor_names_in(dir)) {
+        // References may legitimately cross vendor bundles. Load the complete profile tree in
+        // validation mode so a scoped validation does not mistake an unloaded target for a
+        // dangling reference.
+        if (validation_mode || vendor_to_validate.empty() || name == vendor_to_validate)
             vendors.push_back({ name, dir });
+    }
     auto result = this->load_vendors(vendors, compatibility_rule, true);
 
 	this->update_system_maps();
@@ -4500,7 +4504,8 @@ size_t PresetBundle::num_mixed_filaments() const
     if (opt == nullptr)
         return 0;
     const size_t slot_count = project_config.option<ConfigOptionStrings>("filament_colour")->values.size();
-    return size_t(std::count(opt->values.begin(), opt->values.begin() + std::min(slot_count, opt->values.size()), true));
+    const auto end = opt->values.begin() + std::min(slot_count, opt->values.size());
+    return size_t(std::count_if(opt->values.begin(), end, [](unsigned char value) { return value != 0; }));
 }
 
 // Colours describe actual slots; on a tool changer filament_presets can be topped up to the tool count alone.
@@ -9036,9 +9041,8 @@ static std::string preset_file_uri(const std::string &file)
 //   resolved != name  -> the reference uses an old name that renamed_from maps to a current one.
 // Both should be fixed at the source rather than relying on load-time normalization - which is why
 // normalize_compatible_presets() is skipped in validation mode (see load_presets), so this sees the
-// raw vendor-JSON references. Safe under a single-vendor run (-v) too: inherits / compatible_printers
-// / compatible_prints only name same-vendor or OrcaFilamentLibrary presets (both loaded), so a
-// reference that does not resolve is genuinely dangling rather than an unloaded cross-vendor preset.
+// raw vendor-JSON references. Validation loads the complete profile tree even when -v scopes the
+// reported sweep, because compatible_printers / compatible_prints may target another vendor.
 bool PresetBundle::check_preset_references() const
 {
     bool found = false;

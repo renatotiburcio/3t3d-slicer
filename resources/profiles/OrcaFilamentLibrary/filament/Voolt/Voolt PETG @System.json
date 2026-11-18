@@ -1,0 +1,9 @@
+{
+	"type": "filament",
+	"name": "Voolt PETG @System",
+	"inherits": "Voolt PETG @base",
+	"from": "system",
+	"setting_id": "OP1BCq0Amw1z30G6",
+	"instantiation": "true",
+	"compatible_printers": []
+}

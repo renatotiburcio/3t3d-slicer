@@ -1,0 +1,9 @@
+{
+	"type": "filament",
+	"name": "Creality PLA-CF @System",
+	"inherits": "Creality PLA-CF @base",
+	"from": "system",
+	"setting_id": "W1XBwDl9YgeckkPO",
+	"instantiation": "true",
+	"compatible_printers": []
+}

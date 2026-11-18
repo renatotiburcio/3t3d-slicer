@@ -452,7 +452,7 @@ public:
         // is shown. The previous 1500 ms auto-timeout closed the splash long
         // before init finished, leaving the user staring at a frozen blank
         // screen during the slow load_presets / new MainFrame phases.
-        : wxSplashScreen(wxBitmap(FromDIP(wxSize(480,480),nullptr)), wxSPLASH_CENTRE_ON_SCREEN, 0, nullptr, wxID_ANY, wxDefaultPosition, wxDefaultSize,
+        : wxSplashScreen(wxBitmap(FromDIP(wxSize(560,360),nullptr)), wxSPLASH_CENTRE_ON_SCREEN, 0, nullptr, wxID_ANY, wxDefaultPosition, wxDefaultSize,
 #ifdef __APPLE__
             wxBORDER_NONE | wxFRAME_NO_TASKBAR | wxSTAY_ON_TOP
 #else
@@ -479,15 +479,16 @@ public:
 
         scale_font(m_font_version, 1.65f); // only scale this one since it hasnt a preloaded font like Label::Body_24;
 
-        m_bg_color = StateColor::darkModeColorFor(wxColour("#FFFFFF"));
-        m_fg_color = StateColor::darkModeColorFor(wxColour("#6B6A6A"));
-        m_progress_bg_color = StateColor::darkModeColorFor(wxColour("#DFDFDF"));
-        m_progress_fg_color = StateColor::darkModeColorFor(wxColour("#009688"));
-        m_progress_h = FromDIP(6);
-        bool dark_mode = m_fg_color != wxColour("#6B6A6A");
-        wxSize sz  = m_window->GetClientSize();
+        m_bg_color = StateColor::darkModeColorFor(wxColour("#F4FBFA"));
+        m_fg_color = StateColor::darkModeColorFor(wxColour("#1B2426"));
+        m_progress_bg_color = StateColor::darkModeColorFor(wxColour("#D7E8E5"));
+        m_progress_fg_color = StateColor::darkModeColorFor(wxColour("#1AA870"));
+        m_progress_h = FromDIP(5);
+        bool dark_mode = m_bg_color != wxColour("#F4FBFA");
         BitmapCache bmp_cache;
-        m_logo_bmp = *bmp_cache.load_svg(dark_mode ? "splash_logo_dark" : "splash_logo", sz.GetWidth(), sz.GetHeight());
+        const int logo_size = FromDIP(148);
+        m_logo_bmp = *bmp_cache.load_svg(dark_mode ? "splash_logo_dark" : "splash_logo", logo_size, logo_size);
+        m_font_brand = wxFontInfo(24).Family(wxFONTFAMILY_SWISS).Bold();
 
         m_window->Bind(wxEVT_PAINT, &SplashScreen::OnPaint, this);
         m_window->Refresh();
@@ -501,19 +502,27 @@ public:
 
         dc.SetBackground(wxBrush(m_bg_color));
         dc.Clear();
-        if (m_logo_bmp.IsOk())
-            dc.DrawBitmap(m_logo_bmp, 0, 0, true);
+        if (m_logo_bmp.IsOk()) {
+            const int logo_x = (c_sz.GetWidth() - m_logo_bmp.GetWidth()) / 2;
+            dc.DrawBitmap(m_logo_bmp, logo_x, FromDIP(28), true);
+        }
 
         wxRect rc = wxRect(0, 0, c_sz.GetWidth(), 0);
+        dc.SetTextForeground(m_progress_fg_color);
+        dc.SetFont(m_font_brand);
+        rc.y = FromDIP(190);
+        rc.height = dc.GetTextExtent(m_text_brand).GetHeight();
+        dc.DrawLabel(m_text_brand, rc, wxALIGN_CENTER);
+
         dc.SetTextForeground(m_fg_color);
 
         dc.SetFont(m_font_version);
-        rc.y      = c_sz.GetHeight() * 0.72;
+        rc.y      = FromDIP(235);
         rc.height = dc.GetTextExtent(m_text_version).GetHeight();
         dc.DrawLabel(m_text_version, rc, wxALIGN_CENTER);
 
         dc.SetFont(m_font_action);
-        rc.y      = c_sz.GetHeight() * 0.85;
+        rc.y      = FromDIP(272);
         rc.height = dc.GetTextExtent(m_text_action).GetHeight();
         dc.DrawLabel(m_text_action, rc, wxALIGN_CENTER);
 
@@ -581,12 +590,14 @@ private:
     wxColour m_progress_fg_color;
 
     wxString m_text_version = GUI_App::format_display_version();
+    wxString m_text_brand = "3T3D Slicer";
     wxString m_text_action  = _L("Loading configuration") + dots;
     int      m_progress     = 0;
     int      m_progress_h   = 6;
 
     wxFont m_font_version = Label::Body_16;
     wxFont m_font_action  = Label::Body_16;
+    wxFont m_font_brand;
 };
 
 #ifdef __linux__
@@ -3724,6 +3735,26 @@ bool GUI_App::on_init_inner()
 
     //if (loaded_preset_result != 0) {
         try {
+            // Repair a legacy Anycubic installation before PresetBundle reads
+            // the system profiles. A manifest alone is not enough: older
+            // installations may contain only filaments, which leaves the
+            // active printer as "Default Printer" even though the wizard can
+            // display the bundled model.
+            const auto configured_vendors = app_config->vendors();
+            const auto anycubic = configured_vendors.find("Anycubic");
+            if (anycubic != configured_vendors.end() && !anycubic->second.empty()
+                && !Slic3r::is_vendor_installed("Anycubic")) {
+                if (!Slic3r::install_vendor_bundles_from_resources({"Anycubic"}))
+                    BOOST_LOG_TRIVIAL(warning) << "3T3D: failed to repair the Anycubic profile bundle at startup";
+            }
+            // 3T3D exposes the two real Kobra 4 variants together. Older
+            // configurations enabled only the standalone model, which made
+            // the Combo preset load successfully but remain hidden.
+            if (anycubic != configured_vendors.end()
+                && app_config->get_variant("Anycubic", "Anycubic Kobra 4", "0.4")) {
+                app_config->set_variant("Anycubic", "Anycubic Kobra 4 Combo", "0.4", true);
+                app_config->save();
+            }
             // Enable all substitutions (in both user and system profiles), but log the substitutions in user profiles only.
             // If there are substitutions in system profiles, then a "reconfigure" event shall be triggered, which will force
             // installation of a compatible system preset, thus nullifying the system preset substitutions.
@@ -3790,6 +3821,17 @@ bool GUI_App::on_init_inner()
     }
     else {
         if (scrn) { scrn->SetText(_L("Loading current preset") + dots, 85); wxYield(); }
+
+        // Recover the 3T3D first-use default if an older configuration still
+        // points to the generic placeholder. Do not override a deliberate
+        // user selection of another printer.
+        if (preset_bundle->printers.get_selected_preset().name == "Default Printer"
+            && preset_bundle->printers.find_preset("Anycubic Kobra 4 Combo 0.4 nozzle", false) != nullptr
+            && preset_bundle->printers.select_preset_by_name("Anycubic Kobra 4 Combo 0.4 nozzle", true)) {
+            app_config->set("presets", PRESET_PRINTER_NAME, "Anycubic Kobra 4 Combo 0.4 nozzle");
+            app_config->save();
+            BOOST_LOG_TRIVIAL(info) << "3T3D: recovered default printer Anycubic Kobra 4 Combo 0.4 nozzle";
+        }
         load_current_presets();
     }
 
@@ -5412,7 +5454,10 @@ std::string GUI_App::get_printer_cloud_provider() const
     const std::string agent_id = resolve_printer_agent_id(
         preset_bundle ? preset_bundle->printers.get_edited_preset().config.opt_string("printer_agent")
                       : std::string());
-    return agent_id == BBL_PRINTER_AGENT_ID ? BBL_CLOUD_PROVIDER : ORCA_CLOUD_PROVIDER;
+    if (agent_id == BBL_PRINTER_AGENT_ID)
+        return BBL_CLOUD_PROVIDER;
+    const std::string selected = app_config ? app_config->get("cloud_provider") : std::string();
+    return selected == BBL_CLOUD_PROVIDER ? BBL_CLOUD_PROVIDER : ORCA_CLOUD_PROVIDER;
 }
 
 
@@ -8563,6 +8608,7 @@ bool GUI_App::load_language(wxString language, bool initial)
 	    wxFileTranslationsLoader::AddCatalogLookupPathPrefix(from_u8(localization_dir()));
     	// Get the active language from PrusaSlicer.ini, or empty string if the key does not exist.
         language = app_config->get("language");
+        if (language.empty()) language = "pt_BR";
         if (! language.empty())
         	BOOST_LOG_TRIVIAL(info) << boost::format("language provided by OrcaSlicer.conf: %1%") % language;
         else {

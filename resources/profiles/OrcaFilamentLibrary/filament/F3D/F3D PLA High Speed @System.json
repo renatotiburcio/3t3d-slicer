@@ -1,0 +1,9 @@
+{
+	"type": "filament",
+	"name": "F3D PLA High Speed @System",
+	"inherits": "F3D PLA High Speed @base",
+	"from": "system",
+	"setting_id": "T9rGD7gc31ombt2d",
+	"instantiation": "true",
+	"compatible_printers": []
+}

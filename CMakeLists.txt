@@ -429,11 +429,6 @@ if (MSVC)
     # Disable warnings on comparison of unsigned and signed
     # C4018: signed/unsigned mismatch
     add_compile_options(/wd4018)
-    # Prevent linker restart when TBB (or other deps) built with /GL are linked
-	# Make your full (clean) build slower because it enables link-time code generation across all translation units.
-	# helps incremental builds by preventing the double-link restart from TBB
-    set(CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS} /LTCG")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /LTCG")
 endif ()
 
 # Without this every object names its build directory and two worktrees never

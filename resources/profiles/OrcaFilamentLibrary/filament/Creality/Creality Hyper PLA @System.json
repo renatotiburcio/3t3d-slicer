@@ -1,0 +1,9 @@
+{
+	"type": "filament",
+	"name": "Creality Hyper PLA @System",
+	"inherits": "Creality Hyper PLA @base",
+	"from": "system",
+	"setting_id": "vme8twZTluZ4qP7f",
+	"instantiation": "true",
+	"compatible_printers": []
+}

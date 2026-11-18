@@ -5,50 +5,29 @@
 	"from": "system",
 	"filament_id": "OF3kBrdA",
 	"instantiation": "false",
-	"filament_vendor": [
-		"eSUN"
-	],
-	"filament_density": [
-		"1.27"
-	],
-	"filament_flow_ratio": [
-		"0.98"
-	],
-	"filament_max_volumetric_speed": [
-		"10"
-	],
-	"fan_max_speed": [
-		"100"
-	],
-	"fan_min_speed": [
-		"30"
-	],
-	"nozzle_temperature": [
-		"240"
-	],
-	"nozzle_temperature_initial_layer": [
-		"240"
-	],
-	"nozzle_temperature_range_high": [
-		"250"
-	],
-	"nozzle_temperature_range_low": [
-		"230"
-	],
-	"temperature_vitrification": [
-		"64"
-	],
-	"hot_plate_temp": [
-		"65"
-	],
-	"hot_plate_temp_initial_layer": [
-		"65"
-	],
-	"textured_plate_temp": [
-		"65"
-	],
-	"textured_plate_temp_initial_layer": [
-		"65"
-	],
-	"compatible_printers": []
+	"cool_plate_temp": ["0"],
+	"cool_plate_temp_initial_layer": ["0"],
+	"eng_plate_temp": ["70"],
+	"eng_plate_temp_initial_layer": ["75"],
+	"fan_cooling_layer_time": ["30"],
+	"fan_max_speed": ["40"],
+	"fan_min_speed": ["10"],
+	"filament_cost": ["23"],
+	"filament_density": ["1.27"],
+	"filament_flow_ratio": ["0.95"],
+	"filament_max_volumetric_speed": ["14"],
+	"filament_type": ["PETG"],
+	"filament_vendor": ["eSUN"],
+	"hot_plate_temp": ["70"],
+	"hot_plate_temp_initial_layer": ["75"],
+	"nozzle_temperature": ["230"],
+	"nozzle_temperature_initial_layer": ["235"],
+	"nozzle_temperature_range_high": ["245"],
+	"nozzle_temperature_range_low": ["220"],
+	"overhang_fan_speed": ["90"],
+	"overhang_fan_threshold": ["10%"],
+	"slow_down_layer_time": ["12"],
+	"textured_plate_temp": ["70"],
+	"textured_plate_temp_initial_layer": ["75"],
+	"temperature_vitrification": ["80"]
 }

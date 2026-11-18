@@ -3,6 +3,7 @@
 #include "ConfigWizard.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/filesystem/directory.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -92,11 +93,11 @@ namespace Slic3r { namespace GUI {
 static json guide_strings()
 {
     return {
-        {"loading", _u8L("Loading…")},
+        {"loading", _u8L("Loading...")},
         // TRN Sidebar entry of the printer selection page for the group of custom (user-defined) printers.
         {"custom_vendor", _u8L_CONTEXT("Custom", "Printer vendor")},
-        {"welcome", _u8L("Welcome to Orca Slicer")},
-        {"setup_intro", _u8L("Orca Slicer will be set up in several steps. Let's start!")},
+        {"welcome", _u8L("Welcome to 3T3D Slicer")},
+        {"setup_intro", _u8L("3T3D Slicer will be set up in several steps. Let's start!")},
         {"get_started", _u8L("Get Started")},
         {"login_region", _u8L("Please select your login region")},
         {"asia_pacific", _u8L("Asia-Pacific")},
@@ -144,13 +145,13 @@ static json guide_strings()
         {"filament_required", _u8L("At least one filament must be selected.")},
         {"use_default_filament", _u8L("Do you want to use the default filament?")},
         {"stealth_mode", _u8L("Stealth Mode")},
-        {"stealth_mode_desc", _u8L("This disables all cloud features, including Orca Cloud profile syncing. Users who prefer to work entirely offline can enable this option.")},
-        {"stealth_mode_note", _u8L("Note: When Stealth Mode is enabled, your user profiles will not be backed up to Orca Cloud.")},
+        {"stealth_mode_desc", _u8L("This disables all cloud features and profile synchronization. Users who prefer to work entirely offline can enable this option.")},
+        {"stealth_mode_note", _u8L("Note: When Stealth Mode is enabled, your user profiles will not be backed up to a cloud provider.")},
         {"enable_stealth_mode", _u8L("Enable Stealth Mode.")},
         {"proprietary_plugins", _u8L("Proprietary Plugins")},
         {"proprietary_plugins_desc", _u8L("Some printer vendors require proprietary plugins for communication with their printers. Please select the corresponding plugin if you use such printers.")},
-        {"proprietary_plugins_risk", _u8L("Please be aware that these plugins are not developed or maintained by OrcaSlicer. They should be used at your own discretion and risk.")},
-        {"install_bambu_plugin", _u8L("Install Bambu Network plug-in")},
+        {"proprietary_plugins_risk", _u8L("Please be aware that these plugins are not developed or maintained by 3T3D Slicer. They should be used at your own discretion and risk.")},
+        {"install_bambu_plugin", _u8L("Install the selected printer network plug-in")},
     };
 }
 
@@ -220,7 +221,7 @@ static wxString update_custom_filaments()
 }
 
 GuideFrame::GuideFrame(GUI_App *pGUI, long style)
-    : DPIDialog((wxWindow *) (pGUI->mainframe), wxID_ANY, "OrcaSlicer", wxDefaultPosition, wxDefaultSize, style),
+    : DPIDialog((wxWindow *) (pGUI->mainframe), wxID_ANY, "3T3D Slicer", wxDefaultPosition, wxDefaultSize, style),
 	m_appconfig_new()
 {
     SetBackgroundColour(*wxWHITE);
@@ -293,7 +294,9 @@ GuideFrame::GuideFrame(GUI_App *pGUI, long style)
     // Bind(wxEVT_CLOSE_WINDOW, &GuideFrame::OnClose, this);
 
     // UI
-    SetStartPage(BBL_REGION);
+    // Cloud login and region selection are not part of the 3T3D setup flow.
+    // Start directly at printer selection so Anycubic profiles are visible.
+    SetStartPage(BBL_MODELS);
 
     BOOST_LOG_TRIVIAL(info) << __FUNCTION__ << boost::format(",  finished");
     wxGetApp().UpdateDlgDarkUI(this);
@@ -474,13 +477,10 @@ void GuideFrame::OnNavigationComplete(wxWebViewEvent &evt)
         bFirstComplete = true;
         try {
             init_guide_paths();
-            if (BuildProfileDataFromPresetBundle()) {
-                if (!*m_cancel_token)
-                    on_profile_loaded();
-            } else {
-                // Presets not yet in memory — delegate to background thread.
-                m_load_task = std::make_unique<boost::thread>(boost::bind(&GuideFrame::LoadProfileData, this));
-            }
+            // Never build the multi-vendor wizard payload on the UI thread. The old fast path
+            // was only "fast" after all presets were already loaded; on first use it blocked
+            // the WebView event loop while iterating every printer, filament and process.
+            m_load_task = std::make_unique<boost::thread>(boost::bind(&GuideFrame::LoadProfileData, this));
         } catch (const std::exception& e) {
             BOOST_LOG_TRIVIAL(error) << __FUNCTION__ << ", init error: " << e.what();
             m_load_task = std::make_unique<boost::thread>(boost::bind(&GuideFrame::LoadProfileData, this));
@@ -1210,6 +1210,20 @@ bool GuideFrame::apply_config(AppConfig *app_config, PresetBundle *preset_bundle
             preferred_variant))
         return false;
 
+    // 3T3D first-use default: when Anycubic was selected and the active
+    // printer is still the generic placeholder, make the bundled Kobra 4
+    // preset active so the sidebar and its printer image follow the wizard.
+    if (enabled_vendors.find("Anycubic") != enabled_vendors.end()
+        && app_config->get("presets", PRESET_PRINTER_NAME) == "Default Printer") {
+        const std::string kobra4_preset = "Anycubic Kobra 4 Combo 0.4 nozzle";
+        if (preset_bundle->printers.find_preset(kobra4_preset, false) != nullptr
+            && preset_bundle->printers.select_preset_by_name(kobra4_preset, true)) {
+            app_config->set("presets", PRESET_PRINTER_NAME, kobra4_preset);
+            app_config->save();
+            BOOST_LOG_TRIVIAL(info) << "3T3D: selected default printer " << kobra4_preset;
+        }
+    }
+
     return true;
 }
 
@@ -1260,10 +1274,19 @@ bool GuideFrame::run()
             //we install the default here
             bool apply_keeped_changes = false;
             //clear filament section and use default materials
-            app.app_config->set_variant(PresetBundle::ORCA_DEFAULT_BUNDLE,
-                PresetBundle::ORCA_DEFAULT_PRINTER_MODEL, PresetBundle::ORCA_DEFAULT_PRINTER_VARIANT, "true");
             app.app_config->clear_section(AppConfig::SECTION_FILAMENTS);
-            app.preset_bundle->load_selections(*app.app_config, {PresetBundle::ORCA_DEFAULT_PRINTER_MODEL, PresetBundle::ORCA_DEFAULT_PRINTER_VARIANT, PresetBundle::ORCA_DEFAULT_FILAMENT, std::string()});
+            if (app.preset_bundle->vendors.find("Anycubic") != app.preset_bundle->vendors.end()) {
+                app.app_config->set_variant("Anycubic", "Anycubic Kobra 4", "0.4", "true");
+                app.app_config->set_variant("Anycubic", "Anycubic Kobra 4 Combo", "0.4", "true");
+                app.preset_bundle->load_selections(*app.app_config,
+                    {"Anycubic Kobra 4", "0.4", "Generic PLA @System", std::string()});
+            } else {
+                app.app_config->set_variant(PresetBundle::ORCA_DEFAULT_BUNDLE,
+                    PresetBundle::ORCA_DEFAULT_PRINTER_MODEL, PresetBundle::ORCA_DEFAULT_PRINTER_VARIANT, "true");
+                app.preset_bundle->load_selections(*app.app_config,
+                    {PresetBundle::ORCA_DEFAULT_PRINTER_MODEL, PresetBundle::ORCA_DEFAULT_PRINTER_VARIANT,
+                     PresetBundle::ORCA_DEFAULT_FILAMENT, std::string()});
+            }
 
             app.app_config->set_legacy_datadir(false);
             app.update_mode();
@@ -1511,6 +1534,61 @@ bool GuideFrame::BuildProfileDataFromPresetBundle()
 bool GuideFrame::BuildProfileDataFromVendors()
 {
     try {
+        const auto profile_has_anycubic = [this]() {
+            const auto has_vendor_model = [&]() {
+                if (!m_ProfileJson.contains("model") || !m_ProfileJson["model"].is_array())
+                    return false;
+                for (const auto& model : m_ProfileJson["model"])
+                    if (model.is_object() && model.value("vendor", std::string()) == "Anycubic")
+                        return true;
+                return false;
+            };
+            if (has_vendor_model())
+                return true;
+            if (!m_ProfileJson.contains("machine") || !m_ProfileJson["machine"].is_object())
+                return false;
+            for (auto it = m_ProfileJson["machine"].begin(); it != m_ProfileJson["machine"].end(); ++it) {
+                if (!it.value().is_object())
+                    continue;
+                const std::string model = it.value().value("model", std::string());
+                if (model.find("Anycubic") != std::string::npos)
+                    return true;
+            }
+            return false;
+        };
+
+        // A vendor manifest can be present in the user data directory while
+        // some of its newly referenced child presets are missing. Version
+        // comparison alone cannot detect that case when an old installation
+        // carries the same manifest version as the bundled resource tree.
+        const auto vendor_tree_complete = [](const boost::filesystem::path& dir, const std::string& name) {
+            const boost::filesystem::path manifest = dir / (name + ".json");
+            if (!boost::filesystem::exists(manifest))
+                return true;
+            try {
+                boost::nowide::ifstream stream(manifest.string(), std::ios::binary);
+                const std::string text{std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>()};
+                const json profile = json::parse(text);
+                for (const char* list_name : {"machine_model_list", "machine_list", "process_list", "filament_list"}) {
+                    const auto it = profile.find(list_name);
+                    if (it == profile.end() || !it->is_array())
+                        continue;
+                    for (const auto& item : *it) {
+                        if (!item.is_object() || !item.contains("sub_path"))
+                            continue;
+                        const auto sub_path = item["sub_path"].get<std::string>();
+                        const boost::filesystem::path child = dir / boost::filesystem::path(sub_path);
+                        if (!boost::filesystem::exists(child) || boost::filesystem::file_size(child) == 0)
+                            return false;
+                    }
+                }
+            } catch (const std::exception& e) {
+                BOOST_LOG_TRIVIAL(warning) << "GuideFrame: unable to inspect vendor tree '" << name << "': " << e.what();
+                return false;
+            }
+            return true;
+        };
+
         // Same vendor set and precedence as the JSON scan in LoadProfileData: a
         // vendor in the user's system dir shadows the bundled one of that name.
         // vendor_names_in names a vendor by its profile or, where a build ships
@@ -1519,8 +1597,37 @@ bool GuideFrame::BuildProfileDataFromVendors()
         for (const boost::filesystem::path& dir : { vendor_dir, rsrc_vendor_dir }) {
             boost::system::error_code ec;
             if (boost::filesystem::exists(dir, ec))
-                for (const std::string& name : vendor_names_in(dir))
-                    vendor_sources.emplace(name, dir);   // first dir wins
+                for (const std::string& name : vendor_names_in(dir)) {
+                    auto existing = vendor_sources.find(name);
+                    if (existing == vendor_sources.end()) {
+                        vendor_sources.emplace(name, dir);
+                        continue;
+                    }
+
+                    // A stale per-user profile must not hide a newer bundled
+                    // profile. This matters for newly added printers such as
+                    // Anycubic Kobra 4: the old profile can still exist in the
+                    // user's data directory after an application update.
+                    const auto current_profile = existing->second / (name + ".json");
+                    const auto candidate_profile = dir / (name + ".json");
+                    const Semver current_version = get_version_from_json(current_profile.string());
+                    const Semver candidate_version = get_version_from_json(candidate_profile.string());
+                    // A vendor manifest may have been updated in the user data
+                    // directory without its newly referenced child files being
+                    // copied there. Prefer the bundled tree in that case.
+                    const bool missing_kobra4_files = name == "Anycubic"
+                        && boost::filesystem::exists(dir / "machine" / "Anycubic Kobra 4.json")
+                        && !boost::filesystem::exists(existing->second / "machine" / "Anycubic Kobra 4.json");
+                    const bool candidate_is_more_complete = vendor_tree_complete(dir, name)
+                        && !vendor_tree_complete(existing->second, name);
+                    if (missing_kobra4_files || candidate_is_more_complete
+                        || (candidate_version.valid() && (!current_version.valid() || candidate_version > current_version))) {
+                        BOOST_LOG_TRIVIAL(info) << "GuideFrame: using newer bundled vendor profile '" << name
+                                                << "' (" << candidate_version.to_string() << " > "
+                                                << current_version.to_string() << ")";
+                        existing->second = dir;
+                    }
+                }
         }
 
         // The load order: the filament library first, because the others'
@@ -1572,12 +1679,16 @@ bool GuideFrame::BuildProfileDataFromVendors()
             if (ifs.is_open()) {
                 const std::string text{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
                 json cached = json::parse(text);
-                if (cached.value("format", 0) == 1 && cached["vendors"] == stamps &&
+                if (cached.value("format", 0) == 2 && cached["vendors"] == stamps &&
                     ! cached["profile"]["machine"].empty()) {
                     for (const char* key : { "model", "machine", "filament", "process" })
                         m_ProfileJson[key] = std::move(cached["profile"][key]);
-                    BOOST_LOG_TRIVIAL(info) << "GuideFrame: profile data served from " << cache_file;
-                    return true;
+                    if (profile_has_anycubic()) {
+                        BOOST_LOG_TRIVIAL(info) << "GuideFrame: profile data served from " << cache_file;
+                        return true;
+                    }
+                    BOOST_LOG_TRIVIAL(warning) << "GuideFrame: rejecting profile cache without Anycubic printers";
+                    reset_profile_json();
                 }
             }
         } catch (const std::exception& e) {
@@ -1594,18 +1705,41 @@ bool GuideFrame::BuildProfileDataFromVendors()
             return false;
         if (! errors.empty())
             BOOST_LOG_TRIVIAL(warning) << "GuideFrame: loading the vendors reported: " << errors;
-        // A vendor that failed to load sends this open to the scan below, which lists
-        // what it can read of every vendor.
-        if (! failed.empty())
-            return false;
+        // Keep successful vendors even when an old optional vendor tree is
+        // incomplete. One broken vendor must not hide the complete Anycubic
+        // tree from the printer and filament selectors.
+        if (!failed.empty())
+            BOOST_LOG_TRIVIAL(warning) << "GuideFrame: keeping successfully loaded vendors; incomplete vendors: "
+                                       << boost::algorithm::join(failed, ", ");
         if (! BuildProfileJson(bundle, /*require_all_resource_vendors=*/false))
             return false;
+
+        // A malformed legacy file in the per-user Anycubic tree can make
+        // PresetBundle omit that vendor while successfully loading every other
+        // vendor. Always recover the shipped Anycubic tree in that situation;
+        // otherwise the wizard silently presents a printer list with no
+        // Anycubic entries at all.
+        if (!profile_has_anycubic()) {
+            const boost::filesystem::path anycubic_manifest = rsrc_vendor_dir / "Anycubic.json";
+            if (boost::filesystem::exists(anycubic_manifest)) {
+                BOOST_LOG_TRIVIAL(warning) << "GuideFrame: Anycubic was omitted from PresetBundle; "
+                                              << "loading the bundled Anycubic profile directly";
+                LoadProfileFamily("Anycubic", anycubic_manifest.string());
+            }
+        }
+        if (!profile_has_anycubic()) {
+            BOOST_LOG_TRIVIAL(error) << "GuideFrame: no Anycubic printer profile could be loaded";
+            reset_profile_json();
+            return false;
+        }
 
         // Written through a temp file and moved into place, as the preset caches
         // are: half a cache must never be readable.
         try {
             json out;
-            out["format"]  = 1;
+            // Invalidate caches created before source precedence/completeness
+            // checks were added; those caches could hide the Kobra 4 profile.
+            out["format"]  = 2;
             out["vendors"] = std::move(stamps);
             json& profile  = out["profile"];
             for (const char* key : { "model", "machine", "filament", "process" })
@@ -1626,12 +1760,13 @@ bool GuideFrame::BuildProfileDataFromVendors()
 
 int GuideFrame::LoadProfileData()
 {
-    // Background thread: the fast path in OnNavigationComplete failed (presets not yet loaded).
-    // Loading order (fastest to slowest):
-    //   1. Load every vendor, from its preset cache wherever one covers it
-    //   2. Read all vendor JSONs by hand
+    // Background thread: never make the first-use profile enumeration part of
+    // the WebView/UI event loop. Prefer the version-aware vendor/cache path so
+    // a stale user profile cannot hide newly bundled printers.
+    const auto started = std::chrono::steady_clock::now();
+    BOOST_LOG_TRIVIAL(info) << "GuideFrame: profile loading started on worker thread";
     try {
-        if (!BuildProfileDataFromVendors()) {
+        if (!BuildProfileDataFromVendors() && !BuildProfileDataFromPresetBundle()) {
             // Last resort — read all vendor JSONs
             std::set<std::string> loaded_vendors;
             auto filament_library_name = boost::filesystem::path(PresetBundle::ORCA_FILAMENT_LIBRARY).replace_extension(".json");
@@ -1674,6 +1809,9 @@ int GuideFrame::LoadProfileData()
 
         // Capture the cancel token by value (shared_ptr) so the lambda doesn't
         // touch `this` if GuideFrame is destroyed before the event fires.
+        const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - started).count();
+        BOOST_LOG_TRIVIAL(info) << "GuideFrame: profile loading completed in " << elapsed << " ms";
         auto tok = m_cancel_token;
         wxGetApp().CallAfter([this, tok] {
             if (!*tok)

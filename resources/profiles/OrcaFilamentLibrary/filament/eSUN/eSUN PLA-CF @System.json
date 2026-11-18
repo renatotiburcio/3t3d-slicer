@@ -1,0 +1,9 @@
+{
+	"type": "filament",
+	"name": "eSUN PLA-CF @System",
+	"inherits": "eSUN PLA-CF @base",
+	"from": "system",
+	"setting_id": "HWLxXuoZcJz3r8kJ",
+	"instantiation": "true",
+	"compatible_printers": []
+}

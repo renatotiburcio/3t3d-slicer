@@ -1,0 +1,9 @@
+{
+	"type": "filament",
+	"name": "F3D PETG @System",
+	"inherits": "F3D PETG @base",
+	"from": "system",
+	"setting_id": "KLSmZTL7mTBqVEDH",
+	"instantiation": "true",
+	"compatible_printers": []
+}

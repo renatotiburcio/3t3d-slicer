@@ -1,0 +1,9 @@
+{
+	"type": "filament",
+	"name": "Cliever PLA @System",
+	"inherits": "Cliever PLA @base",
+	"from": "system",
+	"setting_id": "nc1ldcTVZ501AGoM",
+	"instantiation": "true",
+	"compatible_printers": []
+}

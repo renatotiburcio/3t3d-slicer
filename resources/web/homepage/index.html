@@ -13,17 +13,15 @@
 <script type="text/javascript" src="../include/json2.js"></script>	
 <script type="text/javascript" src="../include/globalapi.js"></script>	
 
-<link rel="stylesheet" type="text/css" href="../include/swiper/swiper-bundle.min.css" />
-<script type="text/javascript" src="../include/swiper/swiper-bundle.min.js"></script>
 <script type="text/javascript" src="../include/i18n.js"></script>		
 	
 <script type="text/javascript" src="js/home.js"></script>
 </head>
 <body class="thin-scroll" onLoad="OnInit()">
 <div id="LeftBoard">
-	<div id="LoginArea">
+	<div id="LoginArea" hidden>
 
-		<!-- Orca Cloud account -->
+		<!-- 3T3D cloud account -->
 		<div id="OrcaAccount" class="AccountRow" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false"
 			 onClick="OnAccountRowClick('orca')">
 			<span class="AccountAvatar">
@@ -31,7 +29,7 @@
 			</span>
 			<span class="AccountText">
 				<span id="UserName" class="AccountName"></span>
-				<span class="AccountSecondary">Orca Cloud</span>
+				<span class="AccountSecondary">Cloud account</span>
 			</span>
 			<span class="AccountSignIn" data-i18n="login">Login</span>
 			<svg class="AccountChevron" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -90,14 +88,6 @@
 			<div data-i18n="recent">Recent</div>
 			<div class="NavArrow icon16"></div>
 		</div>
-		<div menu="orca_cloud" class="BtnItem" onClick="GotoCloud()">
-			<div>OrcaCloud</div>
-			<div class="NavArrow icon16"></div>
-		</div>
-		<div class="BtnItem" onClick="OpenUrlInLocalBrowser('https://orcaslicer.com/wiki')">
-			<div>Wiki</div>
-			<div class="ShortcutIcon icon16"></div>
-		</div>
 	</div>
 </div>
 
@@ -105,13 +95,6 @@
 <div id="ContentBoard" class="thin-scroll" board="recent">
     <div style="height: 14px;"></div>	
 	<div id="MenuArea">
-<!--		<div class="MenuItem" onClick="OnClickModelDepot()">
-			<div class="MenuIcon"><img src="img/i6.png"></div>
-			<div>
-				<div class="trans TextS1" tid="t90">3D Model</div>
-				<div class="MenuDesc trans"  tid="t91">Download 3D Models</div>
-			</div>
-		</div>	-->	
 		<div class="MenuItem" onClick="OnClickNewProject()">
 			<div class="MenuIcon"><img src="img/i4.png"></div>
 			<div>

@@ -285,7 +285,7 @@ static bool linear_subdivision(TriMesh& mesh, std::vector<FaceUVArray>& uv_coord
 
     // Single-level flat map with edge key encoding replaces nested unordered_map;
     // merges two vertex indices into a single uint64_t to reduce hash lookups and indirection.
-    if (original_vertices.size() >= (1ULL << 32)) [[unlikely]] {
+    if (original_vertices.size() >= (1ULL << 32)) {
         BOOST_LOG_TRIVIAL(warning) << "[boundary] " << __FUNCTION__ << " vertex_count=" << original_vertices.size() << " exceeds 32-bit edge_key encoding range, skipping subdivision";
         return false;
     }
@@ -329,7 +329,7 @@ static bool linear_subdivision(TriMesh& mesh, std::vector<FaceUVArray>& uv_coord
             auto it01 = map_edge_to_sub_vtx.find(edge_key(vtx_0, vtx_1));
             auto it12 = map_edge_to_sub_vtx.find(edge_key(vtx_1, vtx_2));
             auto it20 = map_edge_to_sub_vtx.find(edge_key(vtx_2, vtx_0));
-            if (it01 == map_edge_to_sub_vtx.end() || it12 == map_edge_to_sub_vtx.end() || it20 == map_edge_to_sub_vtx.end()) [[unlikely]] {
+            if (it01 == map_edge_to_sub_vtx.end() || it12 == map_edge_to_sub_vtx.end() || it20 == map_edge_to_sub_vtx.end()) {
                 has_missing_edge.store(true, std::memory_order_relaxed);
                 Vec3i32 degen(vtx_0, vtx_0, vtx_0);
                 FaceUVArray degen_uv = {uv_coords[fid][0], uv_coords[fid][0], uv_coords[fid][0]};
@@ -468,7 +468,7 @@ static bool adaptive_split_by_vertex_clusters(
                                    << original_vertices.size() << ").";
         return false;
     }
-    if (original_vertices.size() >= (1ULL << 32)) [[unlikely]] {
+    if (original_vertices.size() >= (1ULL << 32)) {
         BOOST_LOG_TRIVIAL(warning) << "adaptive_split_by_vertex_clusters: vertex_count="
                                    << original_vertices.size() << " exceeds 32-bit edge_key range.";
         return false;

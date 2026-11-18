@@ -12,10 +12,10 @@ namespace Slic3r { class ICloudServiceAgent; }
 namespace Slic3r {
 
 /**
- * OrcaPrinterAgent - Stub implementation for printer operations.
+ * OrcaPrinterAgent - compatibility agent for the legacy Orca provider.
  *
- * All printer-related operations are currently stubs that return success.
- * Actual printer connectivity requires the BBL SDK or future Orca implementation.
+ * It does not implement a printer transport. Unsupported operations must
+ * return an explicit error instead of reporting a false successful connection.
  */
 class OrcaPrinterAgent : public IPrinterAgent {
 public:

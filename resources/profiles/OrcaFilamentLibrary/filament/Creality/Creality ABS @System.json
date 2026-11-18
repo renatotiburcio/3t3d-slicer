@@ -1,0 +1,9 @@
+{
+	"type": "filament",
+	"name": "Creality ABS @System",
+	"inherits": "Creality ABS @base",
+	"from": "system",
+	"setting_id": "Rib7DX8ktWPvQKjF",
+	"instantiation": "true",
+	"compatible_printers": []
+}
