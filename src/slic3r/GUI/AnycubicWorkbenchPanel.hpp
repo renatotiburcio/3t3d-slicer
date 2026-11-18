@@ -21,6 +21,7 @@ private:
     void on_timer(wxTimerEvent& event);
     void on_pause_resume(wxCommandEvent& event);
     void on_stop(wxCommandEvent& event);
+    void on_skip_objects(wxCommandEvent& event);
 
     AnycubicKobra4Simulator m_simulator;
     wxTimer                 m_timer;
@@ -33,6 +34,7 @@ private:
     wxGauge*                m_progress{nullptr};
     wxButton*               m_pause_resume{nullptr};
     wxButton*               m_stop{nullptr};
+    wxButton*               m_skip_objects{nullptr};
 };
 
 } // namespace Slic3r::GUI

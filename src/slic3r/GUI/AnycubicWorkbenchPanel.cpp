@@ -2,6 +2,8 @@
 
 #include <wx/button.h>
 #include <wx/gauge.h>
+#include <wx/msgdlg.h>
+#include <wx/choicdlg.h>
 #include <wx/sizer.h>
 #include <wx/stattext.h>
 
@@ -77,8 +79,10 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     auto* controls = new wxBoxSizer(wxHORIZONTAL);
     m_pause_resume = new wxButton(this, wxID_ANY, "Pausar");
     m_stop = new wxButton(this, wxID_ANY, "Parar simulação");
+    m_skip_objects = new wxButton(this, wxID_ANY, "Ignorar objeto...");
     controls->Add(m_pause_resume, 0, wxRIGHT, 8);
-    controls->Add(m_stop, 0);
+    controls->Add(m_stop, 0, wxRIGHT, 8);
+    controls->Add(m_skip_objects, 0);
     control_box->Add(controls, 0, wxLEFT | wxRIGHT | wxBOTTOM, 12);
     right->Add(control_box, 0, wxEXPAND | wxBOTTOM, 12);
 
@@ -98,6 +102,7 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     Bind(wxEVT_TIMER, &AnycubicWorkbenchPanel::on_timer, this);
     m_pause_resume->Bind(wxEVT_BUTTON, &AnycubicWorkbenchPanel::on_pause_resume, this);
     m_stop->Bind(wxEVT_BUTTON, &AnycubicWorkbenchPanel::on_stop, this);
+    m_skip_objects->Bind(wxEVT_BUTTON, &AnycubicWorkbenchPanel::on_skip_objects, this);
     refresh_snapshot();
     m_timer.Start(1000);
 }
@@ -121,6 +126,8 @@ void AnycubicWorkbenchPanel::refresh_snapshot()
                            snapshot.state == AnycubicWorkbenchState::paused);
     m_stop->Enable(snapshot.state == AnycubicWorkbenchState::printing ||
                    snapshot.state == AnycubicWorkbenchState::paused);
+    m_skip_objects->Enable(snapshot.state == AnycubicWorkbenchState::printing &&
+                           !snapshot.print_objects.empty());
     Layout();
 }
 
@@ -141,6 +148,33 @@ void AnycubicWorkbenchPanel::on_pause_resume(wxCommandEvent&)
 void AnycubicWorkbenchPanel::on_stop(wxCommandEvent&)
 {
     m_simulator.set_state(AnycubicWorkbenchState::idle);
+    refresh_snapshot();
+}
+
+void AnycubicWorkbenchPanel::on_skip_objects(wxCommandEvent&)
+{
+    const auto& snapshot = m_simulator.snapshot();
+    wxArrayString choices;
+    for (std::size_t i = 0; i < snapshot.print_objects.size(); ++i) {
+        const bool skipped = std::find(snapshot.skipped_object_ids.begin(), snapshot.skipped_object_ids.end(),
+                                       static_cast<std::uint32_t>(i)) != snapshot.skipped_object_ids.end();
+        choices.Add(wxString::Format("%s%s", wxString::FromUTF8(snapshot.print_objects[i]),
+                                     skipped ? " (já ignorado)" : ""));
+    }
+
+    wxMultiChoiceDialog dialog(this, "Selecione as peças que não devem mais ser impressas nesta tarefa:",
+                               "Ignorar objeto", choices);
+    if (dialog.ShowModal() != wxID_OK || dialog.GetSelections().empty())
+        return;
+
+    if (wxMessageBox("A peça selecionada será ignorada somente no simulador. Deseja continuar?",
+                     "Confirmar ação", wxYES_NO | wxICON_WARNING, this) != wxYES)
+        return;
+
+    std::vector<std::uint32_t> object_ids;
+    for (int selection : dialog.GetSelections())
+        object_ids.push_back(static_cast<std::uint32_t>(selection));
+    m_simulator.skip_objects(object_ids);
     refresh_snapshot();
 }
 

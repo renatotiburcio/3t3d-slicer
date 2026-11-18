@@ -48,3 +48,13 @@ TEST_CASE("Anycubic Kobra 4 Combo simulator does not advance non-printing states
     CHECK(simulator.snapshot().progress_percent == 20.0);
     CHECK(simulator.snapshot().state == AnycubicWorkbenchState::paused);
 }
+
+TEST_CASE("Anycubic Kobra 4 Combo simulator records skipped objects once", "[Anycubic][Workbench]")
+{
+    AnycubicKobra4Simulator simulator;
+    simulator.skip_objects({0, 2, 2, 99});
+
+    REQUIRE(simulator.snapshot().skipped_object_ids.size() == 2);
+    CHECK(simulator.snapshot().skipped_object_ids[0] == 0);
+    CHECK(simulator.snapshot().skipped_object_ids[1] == 2);
+}

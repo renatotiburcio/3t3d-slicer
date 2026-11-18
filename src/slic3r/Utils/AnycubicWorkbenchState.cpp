@@ -15,6 +15,7 @@ void AnycubicKobra4Simulator::reset()
     m_snapshot.serial_number = "SIM-K4C-0001";
     m_snapshot.host = "simulator://anycubic-kobra-4-combo";
     m_snapshot.job_name = "1117-1304-Body(01)_PLA_0.12_15h1m28s";
+    m_snapshot.print_objects = {"Peca principal", "Suporte frontal", "Tampa superior"};
     m_snapshot.camera_available = true;
     m_snapshot.ace_available = true;
     m_snapshot.ace_slot_count = 4;
@@ -50,6 +51,17 @@ void AnycubicKobra4Simulator::set_temperatures(double nozzle, double nozzle_targ
     m_snapshot.nozzle_target_temperature = nozzle_target;
     m_snapshot.bed_temperature = bed;
     m_snapshot.bed_target_temperature = bed_target;
+}
+
+void AnycubicKobra4Simulator::skip_objects(const std::vector<std::uint32_t>& object_ids)
+{
+    for (std::uint32_t object_id : object_ids) {
+        if (object_id >= m_snapshot.print_objects.size())
+            continue;
+        if (std::find(m_snapshot.skipped_object_ids.begin(), m_snapshot.skipped_object_ids.end(), object_id) ==
+            m_snapshot.skipped_object_ids.end())
+            m_snapshot.skipped_object_ids.push_back(object_id);
+    }
 }
 
 void AnycubicKobra4Simulator::tick(std::uint32_t elapsed_seconds)

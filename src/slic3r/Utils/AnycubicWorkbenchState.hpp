@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 namespace Slic3r {
 
@@ -37,6 +38,8 @@ struct AnycubicWorkbenchSnapshot {
     bool ace_available = false;
     std::uint8_t ace_slot_count = 0;
     std::string error_message;
+    std::vector<std::string> print_objects;
+    std::vector<std::uint32_t> skipped_object_ids;
 };
 
 // Deterministic app-side simulator. It never opens a socket and is intended
@@ -52,6 +55,7 @@ public:
     void set_state(AnycubicWorkbenchState state);
     void set_progress(std::uint32_t current_layer, std::uint32_t total_layers);
     void set_temperatures(double nozzle, double nozzle_target, double bed, double bed_target);
+    void skip_objects(const std::vector<std::uint32_t>& object_ids);
     void tick(std::uint32_t elapsed_seconds);
 
 private:

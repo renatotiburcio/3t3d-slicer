@@ -23,6 +23,24 @@ O contrato foi mantido independente do protocolo Anycubic. O adaptador LAN real 
 
 Isso permite desenvolver a Bancada, validar estados e produzir screenshots enquanto a impressora real estiver ocupada.
 
+### Bancada visual e ignorar objeto
+
+A primeira aba `Bancada` foi adicionada ao `MainFrame` com os blocos de tarefa, controle,
+camera, materiais e informacoes do dispositivo. A organizacao segue a referencia enviada
+do Anycubic Slicer Next, mas usa controles nativos do aplicativo e permanece independente
+de cloud.
+
+O simulador oferece tres objetos de teste e a acao `Ignorar objeto...`. A acao permite
+selecionar varias pecas, exige confirmacao e registra cada objeto uma unica vez. Ela nao
+publica rede nem altera a impressora real.
+
+O caminho real devera reutilizar a infraestrutura ja existente: o fatiamento gera
+`EXCLUDE_OBJECT_DEFINE`, `EXCLUDE_OBJECT_START` e `EXCLUDE_OBJECT_END`, enquanto o agente
+de dispositivo ja possui o comando `skip_objects`. Antes de habilitar esse comando para a
+Kobra 4 Combo, sera necessario confirmar no protocolo Anycubic o indice dos objetos, o
+estado permitido, a resposta de erro e a persistencia apos pausa/retomada. A implementacao
+real deve exigir impressora conectada, tarefa imprimindo e confirmacao do usuario.
+
 ### Startup
 
 O assistente de configuracao agora e aberto antes da inicializacao opcional do agente de rede. A sincronizacao de plugins cloud foi removida do caminho de startup. Depois que o fluxo modal do assistente termina, a rede/plugin e inicializada de forma atrasada para preservar LAN futura sem bloquear a tela de boas-vindas.
