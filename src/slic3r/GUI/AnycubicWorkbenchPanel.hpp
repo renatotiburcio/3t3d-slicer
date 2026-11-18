@@ -11,6 +11,7 @@ class wxButton;
 class wxGauge;
 class wxPanel;
 class wxStaticText;
+class wxStaticBitmap;
 
 namespace Slic3r::GUI {
 
@@ -41,6 +42,9 @@ private:
     wxButton*               m_stop{nullptr};
     wxButton*               m_skip_objects{nullptr};
     wxPanel*                m_plate_preview{nullptr};
+    wxPanel*                m_task_thumbnail{nullptr};
+    wxPanel*                m_material_spools{nullptr};
+    wxStaticBitmap*         m_printer_image{nullptr};
     int                     m_selected_object{-1};
     std::vector<int>        m_selected_objects;
 };

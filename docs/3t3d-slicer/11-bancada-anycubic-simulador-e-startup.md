@@ -75,6 +75,20 @@ por `wxString::FromUTF8`, evitando que configuracoes ANSI do Windows produzam mo
 Os cards, hierarquia, espacamento, estados e acoes devem seguir essa paleta e semantica,
 em vez de usar controles wxWidgets com a aparencia padrao como identidade final.
 
+### Paridade visual da etapa atual
+
+O dashboard agora usa componentes visuais dedicados nos pontos que a referencia do
+Anycubic torna mais importantes: a tarefa possui uma miniatura compacta da placa e
+numeracao dos objetos; a Gestao de materiais exibe quatro rolos ACE desenhados com
+cores e posicoes; e Informacoes do dispositivo carrega o ativo oficial
+`profiles/Anycubic/Anycubic Kobra 4 Combo_cover.png`. O painel Controle mantem as acoes
+de simulacao isoladas e a Bancada inclui o bloco Mover eixo com incrementos e direcoes
+desabilitados enquanto nao houver conexao real, evitando comandos acidentais.
+
+Esses elementos sao dados da UI/simulador, nao uma promessa de suporte de protocolo.
+Quando o adaptador Anycubic for integrado, a mesma composicao devera receber telemetria
+real, estados de firmware, camera, tarefa e materiais sem alterar a semantica visual.
+
 ### Startup
 
 O assistente de configuracao agora e aberto antes da inicializacao opcional do agente de rede. A sincronizacao de plugins cloud foi removida do caminho de startup. Depois que o fluxo modal do assistente termina, a rede/plugin e inicializada de forma atrasada para preservar LAN futura sem bloquear a tela de boas-vindas.
@@ -85,14 +99,14 @@ Tambem foram atualizados textos visiveis em erros fatais, WebView2, atualizacao,
 
 - CMake 4.4.4 regenerou o projeto `Visual Studio 18 2026`.
 - `OrcaSlicer_app_gui.vcxproj` Release compilou com sucesso.
-- A aba inicial `Bancada` foi adicionada ao aplicativo com tarefa, progresso, camadas, temperaturas, camera simulada, ACE, dispositivo e controles seguros.
-- `slic3rutils_tests.exe "[Anycubic][Workbench]"` passou: 3 casos e 18 assertions.
+- A aba inicial `Bancada` foi adicionada ao aplicativo com tarefa, miniatura, progresso, camadas, temperaturas, camera simulada, ACE visual, imagem da Kobra 4 Combo, dispositivo e controles seguros.
+- `slic3rutils_tests.exe "[Anycubic][Workbench]"` passou: 6 casos e 28 assertions.
 - O warning `LNK4098` nao reapareceu.
 - Nenhuma conexao com a Kobra 4 Combo foi executada.
 
 ### Proximas etapas
 
-- Criar a pagina visual da Bancada usando o snapshot e o simulador.
-- Conectar os cards de tarefa, controle, camera, materiais e informacoes do dispositivo.
-- Validar visualmente a aba `Bancada` no executavel Release.
+- Refinar a composicao com dados reais do projeto: thumbnail renderizada da tarefa, nomes e cores efetivas dos filamentos e metadados do preset selecionado.
+- Reutilizar a viewport 3D do modo Preparar no seletor de ignorar objetos, mantendo uma camada de interacao exclusiva para selecao/desselecao.
+- Validar visualmente em diferentes escalas DPI e tamanhos de janela, incluindo o primeiro carregamento.
 - Quando a impressora estiver livre, validar a traducao do protocolo Anycubic e substituir o simulador somente no caminho real.
