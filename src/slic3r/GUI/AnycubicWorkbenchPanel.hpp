@@ -7,6 +7,7 @@
 
 class wxButton;
 class wxGauge;
+class wxPanel;
 class wxStaticText;
 
 namespace Slic3r::GUI {
@@ -28,6 +29,7 @@ private:
     wxStaticText*           m_state{nullptr};
     wxStaticText*           m_job{nullptr};
     wxStaticText*           m_layers{nullptr};
+    wxStaticText*           m_objects{nullptr};
     wxStaticText*           m_temperatures{nullptr};
     wxStaticText*           m_device{nullptr};
     wxStaticText*           m_materials{nullptr};
@@ -35,6 +37,7 @@ private:
     wxButton*               m_pause_resume{nullptr};
     wxButton*               m_stop{nullptr};
     wxButton*               m_skip_objects{nullptr};
+    wxPanel*                m_plate_preview{nullptr};
 };
 
 } // namespace Slic3r::GUI

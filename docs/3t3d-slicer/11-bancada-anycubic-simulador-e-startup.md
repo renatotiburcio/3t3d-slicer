@@ -30,6 +30,12 @@ camera, materiais e informacoes do dispositivo. A organizacao segue a referencia
 do Anycubic Slicer Next, mas usa controles nativos do aplicativo e permanece independente
 de cloud.
 
+Na revisao visual, a aba foi reorganizada em tres colunas: impressoras, tarefa/camera e
+controle/dispositivo. A tarefa agora exibe a placa simulada, os objetos e a relacao
+explicita `ID -> nome`, evitando que o usuario precise adivinhar a qual peca pertence um
+identificador. As strings da Bancada usam conversao UTF-8 explicita para evitar mojibake
+em Windows com configuracoes regionais diferentes.
+
 O simulador oferece tres objetos de teste e a acao `Ignorar objeto...`. A acao permite
 selecionar varias pecas, exige confirmacao e registra cada objeto uma unica vez. Ela nao
 publica rede nem altera a impressora real.
