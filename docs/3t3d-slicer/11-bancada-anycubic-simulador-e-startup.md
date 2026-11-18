@@ -89,6 +89,12 @@ Esses elementos sao dados da UI/simulador, nao uma promessa de suporte de protoc
 Quando o adaptador Anycubic for integrado, a mesma composicao devera receber telemetria
 real, estados de firmware, camera, tarefa e materiais sem alterar a semantica visual.
 
+O acabamento dos cards segue tokens compartilhados: 12 px de distancia entre blocos,
+10 px de padding interno, raio de 12 px, borda cinza de baixo contraste e fundo externo
+cinza-claro. Isso evita que cada painel crie seu proprio ritmo e deixa a grade estavel
+quando a janela muda de tamanho. Os cards continuam com superficie branca e acoes
+coloridas apenas onde existe significado operacional.
+
 ### Startup
 
 O assistente de configuracao agora e aberto antes da inicializacao opcional do agente de rede. A sincronizacao de plugins cloud foi removida do caminho de startup. Depois que o fluxo modal do assistente termina, a rede/plugin e inicializada de forma atrasada para preservar LAN futura sem bloquear a tela de boas-vindas.

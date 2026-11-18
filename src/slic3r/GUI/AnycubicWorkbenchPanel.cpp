@@ -27,6 +27,9 @@ const wxColour kCyan(29, 189, 223);
 const wxColour kGreen(26, 168, 112);
 const wxColour kMagenta(209, 31, 119);
 const wxColour kSlate(42, 44, 48);
+constexpr int kCardRadius = 12;
+constexpr int kCardGap = 12;
+constexpr int kCardPadding = 10;
 
 wxString u8(const char* text) { return wxString::FromUTF8(text); }
 
@@ -179,6 +182,17 @@ WorkbenchCard card(wxWindow* parent, const wxString& title, const wxColour& acce
 {
     auto* panel = new wxPanel(parent);
     panel->SetBackgroundColour(kSurface);
+    panel->SetBackgroundStyle(wxBG_STYLE_PAINT);
+    panel->Bind(wxEVT_PAINT, [panel](wxPaintEvent&) {
+        wxAutoBufferedPaintDC dc(panel);
+        dc.SetBackground(wxBrush(kBackground));
+        dc.Clear();
+        wxRect bounds = panel->GetClientRect();
+        bounds.Deflate(1);
+        dc.SetBrush(wxBrush(kSurface));
+        dc.SetPen(wxPen(wxColour(226, 229, 234), 1));
+        dc.DrawRoundedRectangle(bounds, kCardRadius);
+    });
     auto* root = new wxBoxSizer(wxVERTICAL);
     auto* header = new wxPanel(panel);
     header->SetBackgroundColour(kSurface);
@@ -190,15 +204,15 @@ WorkbenchCard card(wxWindow* parent, const wxString& title, const wxColour& acce
     label->SetFont(font);
     label->SetForegroundColour(kInk);
     label->SetBackgroundColour(kSurface);
-    header_sizer->Add(label, 0, wxLEFT | wxRIGHT | wxTOP, 12);
+    header_sizer->Add(label, 0, wxLEFT | wxRIGHT | wxTOP, kCardPadding + 2);
     auto* stripe = new wxPanel(header, wxID_ANY, wxDefaultPosition, wxSize(-1, 3));
     stripe->SetBackgroundColour(accent);
     stripe->SetMinSize(wxSize(-1, 3));
-    header_sizer->Add(stripe, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 8);
+    header_sizer->Add(stripe, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, kCardPadding);
     header->SetSizer(header_sizer);
     root->Add(header, 0, wxEXPAND);
     auto* body = new wxBoxSizer(wxVERTICAL);
-    root->Add(body, 1, wxEXPAND | wxALL, 8);
+    root->Add(body, 1, wxEXPAND | wxALL, kCardPadding);
     panel->SetSizer(root);
     return {panel, body};
 }
@@ -259,7 +273,7 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     selected->SetSizer(selected_sizer);
     printers.body->Add(selected, 0, wxEXPAND | wxALL, 8);
     printers.body->Add(body_text(printers.panel, u8(u8"Modo simulado \u2014 nenhuma conex\u00e3o ativa"), kSurface), 0, wxALL, 10);
-    content->Add(printers.panel, 0, wxEXPAND | wxALL, 14);
+    content->Add(printers.panel, 0, wxEXPAND | wxALL, kCardGap);
 
     auto* center = new wxBoxSizer(wxVERTICAL);
     auto job = card(this, u8(u8"Tarefa de impress\u00e3o"), kCyan);
@@ -296,7 +310,7 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     task_row->Add(task_details, 1, wxEXPAND);
     job.body->Add(task_row, 0, wxEXPAND | wxALL, 12);
     job.body->Add(m_progress, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 12);
-    center->Add(job.panel, 0, wxEXPAND | wxTOP | wxBOTTOM, 14);
+    center->Add(job.panel, 0, wxEXPAND | wxTOP | wxBOTTOM, kCardGap);
 
     auto camera = card(this, u8(u8"C\u00e2mera / placa de impress\u00e3o"), kGreen);
     m_plate_preview = new wxPanel(camera.panel, wxID_ANY, wxDefaultPosition, wxSize(320, 190));
@@ -392,8 +406,8 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     camera.body->Add(m_plate_preview, 1, wxEXPAND | wxALL, 8);
     camera.body->Add(body_text(camera.panel, u8(u8"Pr\u00e9-visualiza\u00e7\u00e3o simulada")), 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
     camera.body->Add(body_text(camera.panel, u8(u8"Legenda: contorno escuro = selecionado | seta = orienta\u00e7\u00e3o | cinza + IGN = ignorado.")), 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
-    center->Add(camera.panel, 1, wxEXPAND | wxBOTTOM, 14);
-    content->Add(center, 2, wxEXPAND | wxRIGHT, 2);
+    center->Add(camera.panel, 1, wxEXPAND | wxBOTTOM, kCardGap);
+    content->Add(center, 2, wxEXPAND | wxRIGHT, kCardGap / 2);
 
     auto* right = new wxBoxSizer(wxVERTICAL);
     auto control = card(this, "Controle", kCyan);
@@ -418,7 +432,7 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     actions->Add(m_stop, 0, wxRIGHT, 8);
     actions->Add(m_skip_objects, 0);
     control.body->Add(actions, 0, wxLEFT | wxRIGHT | wxBOTTOM, 12);
-    right->Add(control.panel, 0, wxEXPAND | wxTOP | wxBOTTOM, 14);
+    right->Add(control.panel, 0, wxEXPAND | wxTOP | wxBOTTOM, kCardGap);
 
     auto materials = card(this, u8(u8"Gest\u00e3o de materiais"), kMagenta);
     m_materials = body_text(materials.panel, u8(u8"ACE: 4 posi\u00e7\u00f5es simuladas\nPLA 1   PLA 2   PLA 3   PLA 4"));
@@ -446,7 +460,7 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
         }
     });
     materials.body->Add(m_material_spools, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 8);
-    right->Add(materials.panel, 0, wxEXPAND | wxBOTTOM, 14);
+    right->Add(materials.panel, 0, wxEXPAND | wxBOTTOM, kCardGap);
     auto device = card(this, u8(u8"Informa\u00e7\u00f5es do dispositivo"), kGreen);
     m_device = body_text(device.panel, wxEmptyString);
     auto* device_row = new wxBoxSizer(wxHORIZONTAL);
@@ -455,7 +469,7 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     device_row->Add(m_printer_image, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 12);
     device_row->Add(m_device, 1, wxALIGN_CENTER_VERTICAL);
     device.body->Add(device_row, 0, wxEXPAND | wxALL, 12);
-    right->Add(device.panel, 0, wxEXPAND | wxBOTTOM, 14);
+    right->Add(device.panel, 0, wxEXPAND | wxBOTTOM, kCardGap);
     auto axis = card(this, u8(u8"Mover eixo"), kCyan);
     auto* axis_note = body_text(axis.panel, u8(u8"Controle seguro dispon\u00edvel quando a impressora estiver conectada."));
     axis_note->SetForegroundColour(wxColour(105, 110, 118));
@@ -474,9 +488,9 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
         dpad->Add(button, 1, wxEXPAND);
     }
     axis.body->Add(dpad, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 8);
-    right->Add(axis.panel, 0, wxEXPAND | wxBOTTOM, 14);
-    content->Add(right, 1, wxEXPAND | wxRIGHT, 14);
-    root->Add(content, 1, wxEXPAND);
+    right->Add(axis.panel, 0, wxEXPAND | wxBOTTOM, kCardGap);
+    content->Add(right, 1, wxEXPAND | wxRIGHT, kCardGap);
+    root->Add(content, 1, wxEXPAND | wxLEFT | wxRIGHT, kCardGap);
 
     SetSizer(root);
     Bind(wxEVT_TIMER, &AnycubicWorkbenchPanel::on_timer, this);
