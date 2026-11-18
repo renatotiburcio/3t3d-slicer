@@ -447,11 +447,11 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
             wxString label = labels[i];
             wxString value = values[i];
             if (i == 2)
-                label = u8("Luz da c\\u00e2mera");
+                label = u8("Luz da c\u00e2mera");
             else if (i == 5)
-                label = u8("Detec\\u00e7\\u00e3o");
+                label = u8("Detec\u00e7\u00e3o");
             if (i < 2)
-                value = wxString::Format(u8("%.0f\\u00b0C / %.0f\\u00b0C"), i == 0 ? snapshot.nozzle_temperature : snapshot.bed_temperature,
+                value = wxString::Format(u8("%.0f\u00b0C / %.0f\u00b0C"), i == 0 ? snapshot.nozzle_temperature : snapshot.bed_temperature,
                                          i == 0 ? snapshot.nozzle_target_temperature : snapshot.bed_target_temperature);
             const int x = (i % 3) * (width + gap);
             const int y = (i / 3) * (height + gap);
