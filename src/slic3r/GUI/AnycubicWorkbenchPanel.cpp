@@ -1,6 +1,7 @@
 #include "AnycubicWorkbenchPanel.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <wx/button.h>
 #include <wx/checklst.h>
 #include <wx/dcbuffer.h>
@@ -173,7 +174,29 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
             dc.DrawCircle(points[i], 25);
             dc.SetTextForeground(*wxWHITE);
             dc.DrawText(wxString::Format("ID %zu", i), points[i].x - 16, points[i].y - 8);
+            if (m_selected_object == static_cast<int>(i)) {
+                dc.SetBrush(*wxTRANSPARENT_BRUSH);
+                dc.SetPen(wxPen(kInk, 3));
+                dc.DrawCircle(points[i], 30);
+            }
         }
+    });
+    m_plate_preview->Bind(wxEVT_LEFT_DOWN, [this](wxMouseEvent& event) {
+        const wxSize size = m_plate_preview->GetClientSize();
+        const wxRect plate(30, 22, std::max(140, size.x - 60), std::max(110, size.y - 44));
+        const wxPoint points[] = {{plate.x + plate.width / 3, plate.y + plate.height / 3},
+                                  {plate.x + plate.width * 2 / 3, plate.y + plate.height / 3},
+                                  {plate.x + plate.width / 2, plate.y + plate.height * 2 / 3}};
+        m_selected_object = -1;
+        for (std::size_t i = 0; i < 3; ++i) {
+            const double dx = event.GetPosition().x - points[i].x;
+            const double dy = event.GetPosition().y - points[i].y;
+            if (std::sqrt(dx * dx + dy * dy) <= 34.0) {
+                m_selected_object = static_cast<int>(i);
+                break;
+            }
+        }
+        m_plate_preview->Refresh();
     });
     camera.body->Add(m_plate_preview, 1, wxEXPAND | wxALL, 8);
     camera.body->Add(body_text(camera.panel, u8(u8"Pr\u00e9-visualiza\u00e7\u00e3o simulada")), 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
@@ -274,7 +297,8 @@ void AnycubicWorkbenchPanel::on_skip_objects(wxCommandEvent&)
     auto* body = new wxBoxSizer(wxHORIZONTAL);
     auto* preview = new wxPanel(&dialog, wxID_ANY, wxDefaultPosition, wxSize(390, 300));
     preview->SetBackgroundColour(kSlate);
-    preview->Bind(wxEVT_PAINT, [&snapshot, preview](wxPaintEvent&) {
+    wxCheckListBox* list = nullptr;
+    preview->Bind(wxEVT_PAINT, [&snapshot, preview, &list](wxPaintEvent&) {
         wxAutoBufferedPaintDC dc(preview); dc.SetBackground(wxBrush(kSlate)); dc.Clear();
         const wxSize size = preview->GetClientSize();
         const wxRect plate(28, 28, std::max(180, size.x - 56), std::max(160, size.y - 56));
@@ -282,14 +306,14 @@ void AnycubicWorkbenchPanel::on_skip_objects(wxCommandEvent&)
         const wxColour colors[] = {kCyan, kMagenta, kGreen};
         const wxPoint points[] = {{plate.x + plate.width / 3, plate.y + plate.height / 3}, {plate.x + plate.width * 2 / 3, plate.y + plate.height / 3}, {plate.x + plate.width / 2, plate.y + plate.height * 2 / 3}};
         for (std::size_t i = 0; i < snapshot.print_objects.size() && i < 3; ++i) {
-            const bool skipped = std::find(snapshot.skipped_object_ids.begin(), snapshot.skipped_object_ids.end(), static_cast<std::uint32_t>(i)) != snapshot.skipped_object_ids.end();
+            const bool skipped = list != nullptr && list->IsChecked(static_cast<unsigned int>(i));
             dc.SetBrush(wxBrush(skipped ? wxColour(170, 174, 180) : colors[i])); dc.SetPen(wxPen(*wxWHITE, 2)); dc.DrawCircle(points[i], 38);
             dc.SetTextForeground(*wxWHITE); dc.DrawText(wxString::Format("ID %zu", i), points[i].x - 18, points[i].y - 9);
         }
         dc.SetTextForeground(wxColour(45, 45, 48)); dc.DrawText(u8(u8"Placa de impress\u00e3o"), 42, 38);
     });
     body->Add(preview, 1, wxEXPAND | wxRIGHT, 18);
-    auto* list = new wxCheckListBox(&dialog, wxID_ANY);
+    list = new wxCheckListBox(&dialog, wxID_ANY);
     list->SetBackgroundColour(kSurface);
     list->SetForegroundColour(kInk);
     for (std::size_t i = 0; i < snapshot.print_objects.size(); ++i) {
@@ -297,6 +321,22 @@ void AnycubicWorkbenchPanel::on_skip_objects(wxCommandEvent&)
         list->Append(wxString::Format(u8(u8"ID %zu  \u2014  %s%s"), i, wxString::FromUTF8(snapshot.print_objects[i]), skipped ? u8(u8" (j\u00e1 ignorado)") : wxString()));
         list->Check(static_cast<unsigned int>(i), skipped);
     }
+    preview->Bind(wxEVT_LEFT_DOWN, [preview, list, &snapshot](wxMouseEvent& event) {
+        const wxSize size = preview->GetClientSize();
+        const wxRect plate(28, 28, std::max(180, size.x - 56), std::max(160, size.y - 56));
+        const wxPoint points[] = {{plate.x + plate.width / 3, plate.y + plate.height / 3},
+                                  {plate.x + plate.width * 2 / 3, plate.y + plate.height / 3},
+                                  {plate.x + plate.width / 2, plate.y + plate.height * 2 / 3}};
+        for (std::size_t i = 0; i < snapshot.print_objects.size() && i < 3; ++i) {
+            const double dx = event.GetPosition().x - points[i].x;
+            const double dy = event.GetPosition().y - points[i].y;
+            if (std::sqrt(dx * dx + dy * dy) <= 44.0) {
+                list->Check(static_cast<unsigned int>(i), !list->IsChecked(static_cast<unsigned int>(i)));
+                preview->Refresh();
+                break;
+            }
+        }
+    });
     body->Add(list, 1, wxEXPAND); root->Add(body, 1, wxEXPAND | wxLEFT | wxRIGHT, 18);
     root->Add(new wxStaticText(&dialog, wxID_ANY, u8(u8"Objetos marcados ser\u00e3o pulados pelo simulador e ficar\u00e3o identificados na placa.")), 0, wxLEFT | wxRIGHT | wxTOP, 18);
     auto* buttons = dialog.CreateStdDialogButtonSizer(wxOK | wxCANCEL);

@@ -38,6 +38,7 @@ private:
     wxButton*               m_stop{nullptr};
     wxButton*               m_skip_objects{nullptr};
     wxPanel*                m_plate_preview{nullptr};
+    int                     m_selected_object{-1};
 };
 
 } // namespace Slic3r::GUI
