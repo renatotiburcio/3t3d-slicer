@@ -31,6 +31,15 @@ wxStaticText* heading(wxWindow* parent, const wxString& text, int size = 12)
     font.SetPointSize(size);
     label->SetFont(font);
     label->SetForegroundColour(kInk);
+    label->SetBackgroundColour(kSurface);
+    return label;
+}
+
+wxStaticText* body_text(wxWindow* parent, const wxString& text, const wxColour& background = kSurface)
+{
+    auto* label = new wxStaticText(parent, wxID_ANY, text);
+    label->SetBackgroundColour(background);
+    label->SetForegroundColour(kInk);
     return label;
 }
 
@@ -76,6 +85,7 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     auto* header_sizer = new wxBoxSizer(wxHORIZONTAL);
     auto* title = heading(header, u8(u8"Bancada de trabalho"), 15);
     title->SetForegroundColour(*wxWHITE);
+    title->SetBackgroundColour(kInk);
     header_sizer->Add(title, 1, wxALIGN_CENTER_VERTICAL | wxLEFT, 18);
     auto* brand = new wxStaticText(header, wxID_ANY, "3T3D  |  Anycubic");
     brand->SetForegroundColour(wxColour(220, 245, 242));
@@ -90,21 +100,23 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     selected->SetBackgroundColour(wxColour(232, 248, 245));
     auto* selected_sizer = new wxBoxSizer(wxVERTICAL);
     auto* printer_title = heading(selected, "Anycubic Kobra 4 Combo", 10);
+    printer_title->SetBackgroundColour(wxColour(232, 248, 245));
     selected_sizer->Add(printer_title, 0, wxALL, 10);
     auto* online = new wxStaticText(selected, wxID_ANY, u8("\u25cf  Imprimindo"));
+    online->SetBackgroundColour(wxColour(232, 248, 245));
     online->SetForegroundColour(kGreen);
     selected_sizer->Add(online, 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
-    selected_sizer->Add(new wxStaticText(selected, wxID_ANY, "SIM-K4C-0001"), 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
+    selected_sizer->Add(body_text(selected, "SIM-K4C-0001", wxColour(232, 248, 245)), 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
     selected->SetSizer(selected_sizer);
     printers->Add(selected, 0, wxEXPAND | wxALL, 8);
-    printers->Add(new wxStaticText(this, wxID_ANY, u8(u8"Modo simulado \u2014 nenhuma conex\u00e3o ativa")), 0, wxALL, 10);
+    printers->Add(body_text(this, u8(u8"Modo simulado \u2014 nenhuma conex\u00e3o ativa"), kBackground), 0, wxALL, 10);
     content->Add(printers, 0, wxEXPAND | wxALL, 14);
 
     auto* center = new wxBoxSizer(wxVERTICAL);
     auto* job = card(this, u8(u8"Tarefa de impress\u00e3o"));
-    m_job = new wxStaticText(this, wxID_ANY, wxEmptyString);
-    m_layers = new wxStaticText(this, wxID_ANY, wxEmptyString);
-    m_objects = new wxStaticText(this, wxID_ANY, wxEmptyString);
+    m_job = body_text(this, wxEmptyString);
+    m_layers = body_text(this, wxEmptyString);
+    m_objects = body_text(this, wxEmptyString);
     m_progress = new wxGauge(this, wxID_ANY, 100);
     m_progress->SetForegroundColour(kCyan);
     job->Add(m_job, 0, wxALL, 12);
@@ -141,15 +153,15 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
         }
     });
     camera->Add(m_plate_preview, 1, wxEXPAND | wxALL, 8);
-    camera->Add(new wxStaticText(this, wxID_ANY, u8(u8"Pr\u00e9-visualiza\u00e7\u00e3o simulada")), 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
-    camera->Add(new wxStaticText(this, wxID_ANY, u8(u8"Ciano, magenta e verde identificam os objetos da tarefa.")), 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
+    camera->Add(body_text(this, u8(u8"Pr\u00e9-visualiza\u00e7\u00e3o simulada")), 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
+    camera->Add(body_text(this, u8(u8"Ciano, magenta e verde identificam os objetos da tarefa.")), 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
     center->Add(camera, 1, wxEXPAND | wxBOTTOM, 14);
     content->Add(center, 2, wxEXPAND | wxRIGHT, 2);
 
     auto* right = new wxBoxSizer(wxVERTICAL);
     auto* control = card(this, "Controle");
-    m_state = new wxStaticText(this, wxID_ANY, wxEmptyString);
-    m_temperatures = new wxStaticText(this, wxID_ANY, wxEmptyString);
+    m_state = body_text(this, wxEmptyString);
+    m_temperatures = body_text(this, wxEmptyString);
     control->Add(m_state, 0, wxALL, 12);
     control->Add(m_temperatures, 0, wxLEFT | wxRIGHT | wxBOTTOM, 12);
     auto* actions = new wxBoxSizer(wxHORIZONTAL);
@@ -172,11 +184,11 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     right->Add(control, 0, wxEXPAND | wxTOP | wxBOTTOM, 14);
 
     auto* materials = card(this, u8(u8"Gest\u00e3o de materiais"));
-    m_materials = new wxStaticText(this, wxID_ANY, u8(u8"ACE: 4 posi\u00e7\u00f5es simuladas\nPLA 1   PLA 2   PLA 3   PLA 4"));
+    m_materials = body_text(this, u8(u8"ACE: 4 posi\u00e7\u00f5es simuladas\nPLA 1   PLA 2   PLA 3   PLA 4"));
     materials->Add(m_materials, 0, wxALL, 12);
     right->Add(materials, 0, wxEXPAND | wxBOTTOM, 14);
     auto* device = card(this, u8(u8"Informa\u00e7\u00f5es do dispositivo"));
-    m_device = new wxStaticText(this, wxID_ANY, wxEmptyString);
+    m_device = body_text(this, wxEmptyString);
     device->Add(m_device, 0, wxALL, 12);
     right->Add(device, 0, wxEXPAND | wxBOTTOM, 14);
     content->Add(right, 1, wxEXPAND | wxRIGHT, 14);
