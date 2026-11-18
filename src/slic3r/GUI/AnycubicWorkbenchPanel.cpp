@@ -175,26 +175,32 @@ wxBitmap load_printer_cover(const wxSize& requested_size)
 struct WorkbenchCard
 {
     wxPanel*     panel;
+    wxPanel*     surface;
     wxBoxSizer*  body;
 };
 
 WorkbenchCard card(wxWindow* parent, const wxString& title, const wxColour& accent)
 {
     auto* panel = new wxPanel(parent);
-    panel->SetBackgroundColour(kSurface);
-    panel->SetBackgroundStyle(wxBG_STYLE_PAINT);
-    panel->Bind(wxEVT_PAINT, [panel](wxPaintEvent&) {
-        wxAutoBufferedPaintDC dc(panel);
-        dc.SetBackground(wxBrush(kBackground));
+    panel->SetBackgroundColour(kBackground);
+    auto* surface = new wxPanel(panel);
+    surface->SetBackgroundColour(kSurface);
+    surface->SetBackgroundStyle(wxBG_STYLE_PAINT);
+    surface->Bind(wxEVT_PAINT, [surface](wxPaintEvent&) {
+        wxAutoBufferedPaintDC dc(surface);
+        dc.SetBackground(wxBrush(kSurface));
         dc.Clear();
-        wxRect bounds = panel->GetClientRect();
+        wxRect bounds = surface->GetClientRect();
         bounds.Deflate(1);
         dc.SetBrush(wxBrush(kSurface));
         dc.SetPen(wxPen(wxColour(226, 229, 234), 1));
         dc.DrawRoundedRectangle(bounds, kCardRadius);
     });
+    auto* outer = new wxBoxSizer(wxVERTICAL);
+    outer->Add(surface, 1, wxEXPAND | wxALL, 2);
+    panel->SetSizer(outer);
     auto* root = new wxBoxSizer(wxVERTICAL);
-    auto* header = new wxPanel(panel);
+    auto* header = new wxPanel(surface);
     header->SetBackgroundColour(kSurface);
     auto* header_sizer = new wxBoxSizer(wxVERTICAL);
     auto* label = new wxStaticText(header, wxID_ANY, title);
@@ -213,8 +219,8 @@ WorkbenchCard card(wxWindow* parent, const wxString& title, const wxColour& acce
     root->Add(header, 0, wxEXPAND);
     auto* body = new wxBoxSizer(wxVERTICAL);
     root->Add(body, 1, wxEXPAND | wxALL, kCardPadding);
-    panel->SetSizer(root);
-    return {panel, body};
+    surface->SetSizer(root);
+    return {panel, surface, body};
 }
 
 wxString state_text(AnycubicWorkbenchState state)
@@ -259,7 +265,7 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
 
     auto* content = new wxBoxSizer(wxHORIZONTAL);
     auto printers = card(this, u8(u8"Impressoras na rede"), kCyan);
-    auto* selected = new wxPanel(printers.panel);
+    auto* selected = new wxPanel(printers.surface);
     selected->SetBackgroundColour(wxColour(232, 248, 245));
     auto* selected_sizer = new wxBoxSizer(wxVERTICAL);
     auto* printer_title = heading(selected, "Anycubic Kobra 4 Combo", 10);
@@ -272,18 +278,18 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     selected_sizer->Add(body_text(selected, "SIM-K4C-0001", wxColour(232, 248, 245)), 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
     selected->SetSizer(selected_sizer);
     printers.body->Add(selected, 0, wxEXPAND | wxALL, 8);
-    printers.body->Add(body_text(printers.panel, u8(u8"Modo simulado \u2014 nenhuma conex\u00e3o ativa"), kSurface), 0, wxALL, 10);
+    printers.body->Add(body_text(printers.surface, u8(u8"Modo simulado \u2014 nenhuma conex\u00e3o ativa"), kSurface), 0, wxALL, 10);
     content->Add(printers.panel, 0, wxEXPAND | wxALL, kCardGap);
 
     auto* center = new wxBoxSizer(wxVERTICAL);
     auto job = card(this, u8(u8"Tarefa de impress\u00e3o"), kCyan);
-    m_job = body_text(job.panel, wxEmptyString);
-    m_layers = body_text(job.panel, wxEmptyString);
-    m_objects = body_text(job.panel, wxEmptyString);
-    m_progress = new wxGauge(job.panel, wxID_ANY, 100);
+    m_job = body_text(job.surface, wxEmptyString);
+    m_layers = body_text(job.surface, wxEmptyString);
+    m_objects = body_text(job.surface, wxEmptyString);
+    m_progress = new wxGauge(job.surface, wxID_ANY, 100);
     m_progress->SetForegroundColour(kCyan);
     auto* task_row = new wxBoxSizer(wxHORIZONTAL);
-    m_task_thumbnail = new wxPanel(job.panel, wxID_ANY, wxDefaultPosition, wxSize(150, 112));
+    m_task_thumbnail = new wxPanel(job.surface, wxID_ANY, wxDefaultPosition, wxSize(150, 112));
     m_task_thumbnail->SetBackgroundColour(wxColour(248, 249, 251));
     m_task_thumbnail->Bind(wxEVT_PAINT, [this](wxPaintEvent&) {
         wxAutoBufferedPaintDC dc(m_task_thumbnail);
@@ -313,7 +319,7 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     center->Add(job.panel, 0, wxEXPAND | wxTOP | wxBOTTOM, kCardGap);
 
     auto camera = card(this, u8(u8"C\u00e2mera / placa de impress\u00e3o"), kGreen);
-    m_plate_preview = new wxPanel(camera.panel, wxID_ANY, wxDefaultPosition, wxSize(320, 190));
+    m_plate_preview = new wxPanel(camera.surface, wxID_ANY, wxDefaultPosition, wxSize(320, 190));
     m_plate_preview->SetBackgroundColour(kSlate);
     m_plate_preview->Bind(wxEVT_PAINT, [this](wxPaintEvent&) {
         wxAutoBufferedPaintDC dc(m_plate_preview);
@@ -337,8 +343,11 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
             dc.DrawRoundedRectangle(shapes[i], 8);
             dc.SetTextForeground(*wxWHITE);
             dc.DrawText(wxString::Format("ID %zu", i), points[i].x - 16, points[i].y - 8);
-            if (i < m_simulator.snapshot().print_objects.size())
-                dc.DrawText(short_object_name(m_simulator.snapshot().print_objects[i]), shapes[i].x + 5, shapes[i].y + shapes[i].height - 19);
+            if (i < m_simulator.snapshot().print_objects.size()) {
+                dc.SetTextForeground(kInk);
+                dc.DrawText(short_object_name(m_simulator.snapshot().print_objects[i]), shapes[i].x,
+                            shapes[i].GetBottom() + 4);
+            }
             const int arrow_length = std::max(8, std::min(shapes[i].GetWidth(), shapes[i].GetHeight()) / 3);
             const wxPoint tip(points[i].x + static_cast<int>(std::cos(rotations[i]) * arrow_length),
                               points[i].y - static_cast<int>(std::sin(rotations[i]) * arrow_length));
@@ -404,21 +413,21 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
         event.Skip();
     });
     camera.body->Add(m_plate_preview, 1, wxEXPAND | wxALL, 8);
-    camera.body->Add(body_text(camera.panel, u8(u8"Pr\u00e9-visualiza\u00e7\u00e3o simulada")), 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
-    camera.body->Add(body_text(camera.panel, u8(u8"Legenda: contorno escuro = selecionado | seta = orienta\u00e7\u00e3o | cinza + IGN = ignorado.")), 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
+    camera.body->Add(body_text(camera.surface, u8(u8"Pr\u00e9-visualiza\u00e7\u00e3o simulada")), 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
+    camera.body->Add(body_text(camera.surface, u8(u8"Legenda: contorno escuro = selecionado | seta = orienta\u00e7\u00e3o | cinza + IGN = ignorado.")), 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
     center->Add(camera.panel, 1, wxEXPAND | wxBOTTOM, kCardGap);
     content->Add(center, 2, wxEXPAND | wxRIGHT, kCardGap / 2);
 
     auto* right = new wxBoxSizer(wxVERTICAL);
     auto control = card(this, "Controle", kCyan);
-    m_state = body_text(control.panel, wxEmptyString);
-    m_temperatures = body_text(control.panel, wxEmptyString);
+    m_state = body_text(control.surface, wxEmptyString);
+    m_temperatures = body_text(control.surface, wxEmptyString);
     control.body->Add(m_state, 0, wxALL, 12);
     control.body->Add(m_temperatures, 0, wxLEFT | wxRIGHT | wxBOTTOM, 12);
     auto* actions = new wxBoxSizer(wxHORIZONTAL);
-    m_pause_resume = new wxButton(control.panel, wxID_ANY, u8(u8"Pausar"));
-    m_stop = new wxButton(control.panel, wxID_ANY, u8(u8"Parar simula\u00e7\u00e3o"));
-    m_skip_objects = new wxButton(control.panel, wxID_ANY, u8(u8"Ignorar objetos..."));
+    m_pause_resume = new wxButton(control.surface, wxID_ANY, u8(u8"Pausar"));
+    m_stop = new wxButton(control.surface, wxID_ANY, u8(u8"Parar simula\u00e7\u00e3o"));
+    m_skip_objects = new wxButton(control.surface, wxID_ANY, u8(u8"Ignorar objetos..."));
     m_pause_resume->SetBackgroundColour(kCyan);
     m_pause_resume->SetForegroundColour(*wxWHITE);
     m_skip_objects->SetBackgroundColour(kMagenta);
@@ -435,9 +444,9 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     right->Add(control.panel, 0, wxEXPAND | wxTOP | wxBOTTOM, kCardGap);
 
     auto materials = card(this, u8(u8"Gest\u00e3o de materiais"), kMagenta);
-    m_materials = body_text(materials.panel, u8(u8"ACE: 4 posi\u00e7\u00f5es simuladas\nPLA 1   PLA 2   PLA 3   PLA 4"));
+    m_materials = body_text(materials.surface, u8(u8"ACE: 4 posi\u00e7\u00f5es simuladas\nPLA 1   PLA 2   PLA 3   PLA 4"));
     materials.body->Add(m_materials, 0, wxLEFT | wxRIGHT | wxTOP, 12);
-    m_material_spools = new wxPanel(materials.panel, wxID_ANY, wxDefaultPosition, wxSize(-1, 108));
+    m_material_spools = new wxPanel(materials.surface, wxID_ANY, wxDefaultPosition, wxSize(-1, 108));
     m_material_spools->SetBackgroundColour(kSurface);
     m_material_spools->Bind(wxEVT_PAINT, [this](wxPaintEvent&) {
         wxAutoBufferedPaintDC dc(m_material_spools);
@@ -462,28 +471,28 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     materials.body->Add(m_material_spools, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 8);
     right->Add(materials.panel, 0, wxEXPAND | wxBOTTOM, kCardGap);
     auto device = card(this, u8(u8"Informa\u00e7\u00f5es do dispositivo"), kGreen);
-    m_device = body_text(device.panel, wxEmptyString);
+    m_device = body_text(device.surface, wxEmptyString);
     auto* device_row = new wxBoxSizer(wxHORIZONTAL);
-    m_printer_image = new wxStaticBitmap(device.panel, wxID_ANY, load_printer_cover(wxSize(132, 100)));
+    m_printer_image = new wxStaticBitmap(device.surface, wxID_ANY, load_printer_cover(wxSize(132, 100)));
     m_printer_image->SetBackgroundColour(kSurface);
     device_row->Add(m_printer_image, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 12);
     device_row->Add(m_device, 1, wxALIGN_CENTER_VERTICAL);
     device.body->Add(device_row, 0, wxEXPAND | wxALL, 12);
     right->Add(device.panel, 0, wxEXPAND | wxBOTTOM, kCardGap);
     auto axis = card(this, u8(u8"Mover eixo"), kCyan);
-    auto* axis_note = body_text(axis.panel, u8(u8"Controle seguro dispon\u00edvel quando a impressora estiver conectada."));
+    auto* axis_note = body_text(axis.surface, u8(u8"Controle seguro dispon\u00edvel quando a impressora estiver conectada."));
     axis_note->SetForegroundColour(wxColour(105, 110, 118));
     axis.body->Add(axis_note, 0, wxLEFT | wxRIGHT | wxBOTTOM, 8);
     auto* steps = new wxBoxSizer(wxHORIZONTAL);
     for (const wxString& step : {"1 mm", "15 mm", "50 mm"}) {
-        auto* button = new wxButton(axis.panel, wxID_ANY, step, wxDefaultPosition, wxSize(70, 28));
+        auto* button = new wxButton(axis.surface, wxID_ANY, step, wxDefaultPosition, wxSize(70, 28));
         button->Enable(false);
         steps->Add(button, 0, wxRIGHT, 6);
     }
     axis.body->Add(steps, 0, wxLEFT | wxRIGHT | wxBOTTOM, 8);
     auto* dpad = new wxGridSizer(2, 3, 4, 4);
-    for (const wxString& direction : {"X −", "Y +", "Z +", "X +", "Y −", "Z −"}) {
-        auto* button = new wxButton(axis.panel, wxID_ANY, direction, wxDefaultPosition, wxSize(62, 28));
+    for (const wxString& direction : {"X -", "Y +", "Z +", "X +", "Y -", "Z -"}) {
+        auto* button = new wxButton(axis.surface, wxID_ANY, direction, wxDefaultPosition, wxSize(62, 28));
         button->Enable(false);
         dpad->Add(button, 1, wxEXPAND);
     }
@@ -594,7 +603,8 @@ void AnycubicWorkbenchPanel::on_skip_objects(wxCommandEvent&)
             const bool skipped = list != nullptr && list->IsChecked(static_cast<unsigned int>(i));
             dc.SetBrush(wxBrush(skipped ? wxColour(170, 174, 180) : colors[i])); dc.SetPen(wxPen(*wxWHITE, 2)); dc.DrawRoundedRectangle(shapes[i], 10);
             dc.SetTextForeground(*wxWHITE); dc.DrawText(wxString::Format("ID %zu", i), points[i].x - 18, points[i].y - 9);
-            dc.DrawText(short_object_name(snapshot.print_objects[i]), shapes[i].x + 7, shapes[i].y + shapes[i].height - 20);
+            dc.SetTextForeground(kInk);
+            dc.DrawText(short_object_name(snapshot.print_objects[i]), shapes[i].x, shapes[i].GetBottom() + 4);
             const int arrow_length = std::max(12, std::min(shapes[i].GetWidth(), shapes[i].GetHeight()) / 3);
             const wxPoint tip(points[i].x + static_cast<int>(std::cos(rotations[i]) * arrow_length),
                               points[i].y - static_cast<int>(std::sin(rotations[i]) * arrow_length));
