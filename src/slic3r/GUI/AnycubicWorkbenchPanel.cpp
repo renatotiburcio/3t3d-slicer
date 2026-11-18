@@ -1,5 +1,6 @@
 #include "AnycubicWorkbenchPanel.hpp"
 #include "GUI_App.hpp"
+#include "GLCanvas3D.hpp"
 #include "Plater.hpp"
 
 #include <algorithm>
@@ -196,6 +197,16 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
             const double dy = event.GetPosition().y - points[i].y;
             if (std::sqrt(dx * dx + dy * dy) <= 34.0) {
                 m_selected_object = static_cast<int>(i);
+                if (wxGetApp().plater() != nullptr &&
+                    static_cast<std::size_t>(m_selected_object) < wxGetApp().plater()->model().objects.size()) {
+                    auto* canvas = wxGetApp().plater()->get_view3D_canvas3D();
+                    if (canvas != nullptr) {
+                        auto& selection = canvas->get_selection();
+                        selection.clear();
+                        selection.add_object(static_cast<unsigned int>(m_selected_object));
+                        canvas->set_as_dirty();
+                    }
+                }
                 break;
             }
         }
@@ -268,6 +279,8 @@ void AnycubicWorkbenchPanel::sync_project_objects()
         names.push_back(objects[i] != nullptr && !objects[i]->name.empty() ? objects[i]->name : fallback);
     }
     m_simulator.set_print_objects(std::move(names));
+    const int selected = wxGetApp().plater()->get_selected_object_idx();
+    m_selected_object = selected >= 0 && static_cast<std::size_t>(selected) < objects.size() ? selected : -1;
 }
 
 void AnycubicWorkbenchPanel::refresh_snapshot()
