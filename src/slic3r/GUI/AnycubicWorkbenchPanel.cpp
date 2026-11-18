@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <utility>
 #include <wx/button.h>
 #include <wx/checklst.h>
@@ -46,6 +47,56 @@ wxStaticText* body_text(wxWindow* parent, const wxString& text, const wxColour& 
     label->SetBackgroundColour(background);
     label->SetForegroundColour(kInk);
     return label;
+}
+
+std::vector<wxPoint> object_points(const wxRect& plate, std::size_t count)
+{
+    const wxPoint fallback[] = {{plate.x + plate.width / 3, plate.y + plate.height / 3},
+                                {plate.x + plate.width * 2 / 3, plate.y + plate.height / 3},
+                                {plate.x + plate.width / 2, plate.y + plate.height * 2 / 3}};
+    std::vector<wxPoint> points;
+    points.reserve(count);
+    if (wxGetApp().plater() == nullptr || wxGetApp().plater()->model().objects.empty()) {
+        for (std::size_t i = 0; i < count; ++i)
+            points.push_back(fallback[i % 3]);
+        return points;
+    }
+
+    const auto& objects = wxGetApp().plater()->model().objects;
+    const std::size_t available = std::min(count, objects.size());
+    double min_x = std::numeric_limits<double>::max();
+    double max_x = std::numeric_limits<double>::lowest();
+    double min_y = std::numeric_limits<double>::max();
+    double max_y = std::numeric_limits<double>::lowest();
+    for (std::size_t i = 0; i < available; ++i) {
+        if (objects[i] == nullptr || objects[i]->instances.empty())
+            continue;
+        const Vec3d offset = objects[i]->instances.front()->get_offset();
+        min_x = std::min(min_x, offset.x()); max_x = std::max(max_x, offset.x());
+        min_y = std::min(min_y, offset.y()); max_y = std::max(max_y, offset.y());
+    }
+    if (min_x == std::numeric_limits<double>::max()) {
+        for (std::size_t i = 0; i < count; ++i)
+            points.push_back(fallback[i % 3]);
+        return points;
+    }
+
+    const double range_x = std::max(1.0, max_x - min_x);
+    const double range_y = std::max(1.0, max_y - min_y);
+    const double padding_x = plate.width * 0.16;
+    const double padding_y = plate.height * 0.16;
+    for (std::size_t i = 0; i < count; ++i) {
+        if (i >= available || objects[i] == nullptr || objects[i]->instances.empty()) {
+            points.push_back(fallback[i % 3]);
+            continue;
+        }
+        const Vec3d offset = objects[i]->instances.front()->get_offset();
+        const double nx = (offset.x() - min_x) / range_x;
+        const double ny = (offset.y() - min_y) / range_y;
+        points.emplace_back(static_cast<int>(plate.x + padding_x + nx * (plate.width - 2 * padding_x)),
+                            static_cast<int>(plate.y + padding_y + (1.0 - ny) * (plate.height - 2 * padding_y)));
+    }
+    return points;
 }
 
 struct WorkbenchCard
@@ -166,9 +217,7 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
         dc.SetPen(wxPen(wxColour(155, 160, 166), 1));
         dc.DrawRoundedRectangle(plate, 10);
         const wxColour colors[] = {kCyan, kMagenta, kGreen};
-        const wxPoint points[] = {{plate.x + plate.width / 3, plate.y + plate.height / 3},
-                                  {plate.x + plate.width * 2 / 3, plate.y + plate.height / 3},
-                                  {plate.x + plate.width / 2, plate.y + plate.height * 2 / 3}};
+        const auto points = object_points(plate, 3);
         for (std::size_t i = 0; i < 3; ++i) {
             const bool skipped = std::find(m_simulator.snapshot().skipped_object_ids.begin(),
                                            m_simulator.snapshot().skipped_object_ids.end(),
@@ -189,9 +238,7 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     m_plate_preview->Bind(wxEVT_LEFT_DOWN, [this](wxMouseEvent& event) {
         const wxSize size = m_plate_preview->GetClientSize();
         const wxRect plate(30, 22, std::max(140, size.x - 60), std::max(110, size.y - 44));
-        const wxPoint points[] = {{plate.x + plate.width / 3, plate.y + plate.height / 3},
-                                  {plate.x + plate.width * 2 / 3, plate.y + plate.height / 3},
-                                  {plate.x + plate.width / 2, plate.y + plate.height * 2 / 3}};
+        const auto points = object_points(plate, 3);
         m_selected_object = -1;
         for (std::size_t i = 0; i < 3; ++i) {
             const double dx = event.GetPosition().x - points[i].x;
@@ -351,7 +398,7 @@ void AnycubicWorkbenchPanel::on_skip_objects(wxCommandEvent&)
         const wxRect plate(28, 28, std::max(180, size.x - 56), std::max(160, size.y - 56));
         dc.SetBrush(wxBrush(wxColour(226, 229, 233))); dc.SetPen(wxPen(wxColour(155, 160, 166), 1)); dc.DrawRoundedRectangle(plate, 10);
         const wxColour colors[] = {kCyan, kMagenta, kGreen};
-        const wxPoint points[] = {{plate.x + plate.width / 3, plate.y + plate.height / 3}, {plate.x + plate.width * 2 / 3, plate.y + plate.height / 3}, {plate.x + plate.width / 2, plate.y + plate.height * 2 / 3}};
+        const auto points = object_points(plate, snapshot.print_objects.size());
         for (std::size_t i = 0; i < snapshot.print_objects.size() && i < 3; ++i) {
             const bool skipped = list != nullptr && list->IsChecked(static_cast<unsigned int>(i));
             dc.SetBrush(wxBrush(skipped ? wxColour(170, 174, 180) : colors[i])); dc.SetPen(wxPen(*wxWHITE, 2)); dc.DrawCircle(points[i], 38);
@@ -371,9 +418,7 @@ void AnycubicWorkbenchPanel::on_skip_objects(wxCommandEvent&)
     preview->Bind(wxEVT_LEFT_DOWN, [preview, list, &snapshot](wxMouseEvent& event) {
         const wxSize size = preview->GetClientSize();
         const wxRect plate(28, 28, std::max(180, size.x - 56), std::max(160, size.y - 56));
-        const wxPoint points[] = {{plate.x + plate.width / 3, plate.y + plate.height / 3},
-                                  {plate.x + plate.width * 2 / 3, plate.y + plate.height / 3},
-                                  {plate.x + plate.width / 2, plate.y + plate.height * 2 / 3}};
+        const auto points = object_points(plate, snapshot.print_objects.size());
         for (std::size_t i = 0; i < snapshot.print_objects.size() && i < 3; ++i) {
             const double dx = event.GetPosition().x - points[i].x;
             const double dy = event.GetPosition().y - points[i].y;
