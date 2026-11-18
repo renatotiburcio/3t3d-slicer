@@ -99,16 +99,19 @@ std::vector<wxPoint> object_points(const wxRect& plate, std::size_t count)
     return points;
 }
 
-std::vector<int> object_radii(const wxRect& plate, std::size_t count, int base_radius)
+std::vector<wxRect> object_shapes(const wxRect& plate, std::size_t count, int base_radius)
 {
-    std::vector<int> radii(count, base_radius);
-    if (wxGetApp().plater() == nullptr)
-        return radii;
+    const auto points = object_points(plate, count);
+    std::vector<wxRect> shapes;
+    shapes.reserve(count);
+    const int fallback_size = base_radius * 2;
+    if (wxGetApp().plater() == nullptr || wxGetApp().plater()->model().objects.empty()) {
+        for (const wxPoint& point : points)
+            shapes.emplace_back(point.x - base_radius, point.y - base_radius, fallback_size, fallback_size);
+        return shapes;
+    }
 
     const auto& objects = wxGetApp().plater()->model().objects;
-    if (objects.empty())
-        return radii;
-
     double largest_span = 1.0;
     for (std::size_t i = 0; i < std::min(count, objects.size()); ++i) {
         if (objects[i] == nullptr || objects[i]->volumes.empty())
@@ -116,16 +119,17 @@ std::vector<int> object_radii(const wxRect& plate, std::size_t count, int base_r
         const Vec3d size = objects[i]->raw_mesh_bounding_box().size();
         largest_span = std::max(largest_span, std::max(std::abs(size.x()), std::abs(size.y())));
     }
-    for (std::size_t i = 0; i < std::min(count, objects.size()); ++i) {
-        if (objects[i] == nullptr || objects[i]->volumes.empty())
-            continue;
-        const Vec3d size = objects[i]->raw_mesh_bounding_box().size();
-        const double object_span = std::max(std::abs(size.x()), std::abs(size.y()));
-        const double scale = object_span / largest_span;
-        radii[i] = std::clamp(static_cast<int>(base_radius * (0.72 + 0.62 * scale)),
-                              std::max(16, base_radius - 8), base_radius + 14);
+    for (std::size_t i = 0; i < points.size(); ++i) {
+        int width = fallback_size;
+        int height = fallback_size;
+        if (i < objects.size() && objects[i] != nullptr && !objects[i]->volumes.empty()) {
+            const Vec3d size = objects[i]->raw_mesh_bounding_box().size();
+            width = std::clamp(static_cast<int>(base_radius * 2.4 * std::abs(size.x()) / largest_span), 28, base_radius * 3);
+            height = std::clamp(static_cast<int>(base_radius * 2.4 * std::abs(size.y()) / largest_span), 28, base_radius * 3);
+        }
+        shapes.emplace_back(points[i].x - width / 2, points[i].y - height / 2, width, height);
     }
-    return radii;
+    return shapes;
 }
 
 struct WorkbenchCard
@@ -247,34 +251,35 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
         dc.DrawRoundedRectangle(plate, 10);
         const wxColour colors[] = {kCyan, kMagenta, kGreen};
         const auto points = object_points(plate, 3);
-        const auto radii = object_radii(plate, 3, 25);
+        const auto shapes = object_shapes(plate, 3, 25);
         for (std::size_t i = 0; i < 3; ++i) {
             const bool skipped = std::find(m_simulator.snapshot().skipped_object_ids.begin(),
                                            m_simulator.snapshot().skipped_object_ids.end(),
                                            static_cast<std::uint32_t>(i)) != m_simulator.snapshot().skipped_object_ids.end();
             dc.SetBrush(wxBrush(skipped ? wxColour(170, 174, 180) : colors[i]));
             dc.SetPen(wxPen(*wxWHITE, 2));
-            dc.DrawCircle(points[i], radii[i]);
+            dc.DrawRoundedRectangle(shapes[i], 8);
             dc.SetTextForeground(*wxWHITE);
             dc.DrawText(wxString::Format("ID %zu", i), points[i].x - 16, points[i].y - 8);
             if (m_selected_object == static_cast<int>(i) ||
                 std::find(m_selected_objects.begin(), m_selected_objects.end(), static_cast<int>(i)) != m_selected_objects.end()) {
                 dc.SetBrush(*wxTRANSPARENT_BRUSH);
                 dc.SetPen(wxPen(kInk, 3));
-                dc.DrawCircle(points[i], 30);
+                wxRect selected_shape = shapes[i];
+                selected_shape.Inflate(4);
+                dc.DrawRoundedRectangle(selected_shape, 10);
             }
         }
     });
     m_plate_preview->Bind(wxEVT_LEFT_DOWN, [this](wxMouseEvent& event) {
         const wxSize size = m_plate_preview->GetClientSize();
         const wxRect plate(30, 22, std::max(140, size.x - 60), std::max(110, size.y - 44));
-        const auto points = object_points(plate, 3);
-        const auto radii = object_radii(plate, 3, 25);
+        const auto shapes = object_shapes(plate, 3, 25);
         m_selected_object = -1;
         for (std::size_t i = 0; i < 3; ++i) {
-            const double dx = event.GetPosition().x - points[i].x;
-            const double dy = event.GetPosition().y - points[i].y;
-            if (std::sqrt(dx * dx + dy * dy) <= static_cast<double>(radii[i] + 8)) {
+            wxRect hit_shape = shapes[i];
+            hit_shape.Inflate(8);
+            if (hit_shape.Contains(event.GetPosition())) {
                 m_selected_object = static_cast<int>(i);
                 m_selected_objects = {m_selected_object};
                 if (wxGetApp().plater() != nullptr &&
@@ -430,10 +435,10 @@ void AnycubicWorkbenchPanel::on_skip_objects(wxCommandEvent&)
         dc.SetBrush(wxBrush(wxColour(226, 229, 233))); dc.SetPen(wxPen(wxColour(155, 160, 166), 1)); dc.DrawRoundedRectangle(plate, 10);
         const wxColour colors[] = {kCyan, kMagenta, kGreen};
         const auto points = object_points(plate, snapshot.print_objects.size());
-        const auto radii = object_radii(plate, snapshot.print_objects.size(), 38);
+        const auto shapes = object_shapes(plate, snapshot.print_objects.size(), 38);
         for (std::size_t i = 0; i < snapshot.print_objects.size() && i < 3; ++i) {
             const bool skipped = list != nullptr && list->IsChecked(static_cast<unsigned int>(i));
-            dc.SetBrush(wxBrush(skipped ? wxColour(170, 174, 180) : colors[i])); dc.SetPen(wxPen(*wxWHITE, 2)); dc.DrawCircle(points[i], radii[i]);
+            dc.SetBrush(wxBrush(skipped ? wxColour(170, 174, 180) : colors[i])); dc.SetPen(wxPen(*wxWHITE, 2)); dc.DrawRoundedRectangle(shapes[i], 10);
             dc.SetTextForeground(*wxWHITE); dc.DrawText(wxString::Format("ID %zu", i), points[i].x - 18, points[i].y - 9);
         }
         dc.SetTextForeground(wxColour(45, 45, 48)); dc.DrawText(u8(u8"Placa de impress\u00e3o"), 42, 38);
@@ -450,12 +455,11 @@ void AnycubicWorkbenchPanel::on_skip_objects(wxCommandEvent&)
     preview->Bind(wxEVT_LEFT_DOWN, [preview, list, &snapshot](wxMouseEvent& event) {
         const wxSize size = preview->GetClientSize();
         const wxRect plate(28, 28, std::max(180, size.x - 56), std::max(160, size.y - 56));
-        const auto points = object_points(plate, snapshot.print_objects.size());
-        const auto radii = object_radii(plate, snapshot.print_objects.size(), 38);
+        const auto shapes = object_shapes(plate, snapshot.print_objects.size(), 38);
         for (std::size_t i = 0; i < snapshot.print_objects.size() && i < 3; ++i) {
-            const double dx = event.GetPosition().x - points[i].x;
-            const double dy = event.GetPosition().y - points[i].y;
-            if (std::sqrt(dx * dx + dy * dy) <= static_cast<double>(radii[i] + 6)) {
+            wxRect hit_shape = shapes[i];
+            hit_shape.Inflate(6);
+            if (hit_shape.Contains(event.GetPosition())) {
                 list->Check(static_cast<unsigned int>(i), !list->IsChecked(static_cast<unsigned int>(i)));
                 preview->Refresh();
                 break;
