@@ -63,6 +63,18 @@ confirmacao. A viewport 3D real do modo Preparar continua como proxima integraca
 devera ser reutilizada apenas como visualizador/selecionador, sem permitir transformacao
 ou alteracao do projeto durante uma impressao.
 
+### DNA visual 3T3D
+
+A Bancada usa a paleta extraida dos SVG oficiais em `assets`: ciano `#1DBDDF`, verde
+`#1AA870`, magenta `#D11F77`, preto `#211E1F` e branco. Ciano identifica telemetria
+e acoes primarias; verde identifica estado operacional; magenta identifica acoes
+potencialmente destrutivas; preto estrutura cabecalhos e areas de camera.
+
+A unidade da Bancada mantem o codigo-fonte ASCII e converte textos com escapes Unicode
+por `wxString::FromUTF8`, evitando que configuracoes ANSI do Windows produzam mojibake.
+Os cards, hierarquia, espacamento, estados e acoes devem seguir essa paleta e semantica,
+em vez de usar controles wxWidgets com a aparencia padrao como identidade final.
+
 ### Startup
 
 O assistente de configuracao agora e aberto antes da inicializacao opcional do agente de rede. A sincronizacao de plugins cloud foi removida do caminho de startup. Depois que o fluxo modal do assistente termina, a rede/plugin e inicializada de forma atrasada para preservar LAN futura sem bloquear a tela de boas-vindas.
