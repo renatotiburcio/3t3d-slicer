@@ -328,6 +328,27 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
         }
         m_plate_preview->Refresh();
     });
+    m_plate_preview->Bind(wxEVT_MOTION, [this](wxMouseEvent& event) {
+        const wxSize size = m_plate_preview->GetClientSize();
+        const wxRect plate(30, 22, std::max(140, size.x - 60), std::max(110, size.y - 44));
+        const auto shapes = object_shapes(plate, m_simulator.snapshot().print_objects.size(), 25);
+        wxString tooltip;
+        for (std::size_t i = 0; i < shapes.size() && i < m_simulator.snapshot().print_objects.size() && i < 3; ++i) {
+            wxRect hit_shape = shapes[i];
+            hit_shape.Inflate(8);
+            if (!hit_shape.Contains(event.GetPosition()))
+                continue;
+            const bool skipped = std::find(m_simulator.snapshot().skipped_object_ids.begin(),
+                                           m_simulator.snapshot().skipped_object_ids.end(),
+                                           static_cast<std::uint32_t>(i)) != m_simulator.snapshot().skipped_object_ids.end();
+            tooltip = wxString::Format(u8(u8"ID %zu\n%s\nEstado: %s"), i,
+                                       wxString::FromUTF8(m_simulator.snapshot().print_objects[i]),
+                                       skipped ? u8(u8"Ignorado") : u8(u8"Na tarefa"));
+            break;
+        }
+        m_plate_preview->SetToolTip(tooltip);
+        event.Skip();
+    });
     camera.body->Add(m_plate_preview, 1, wxEXPAND | wxALL, 8);
     camera.body->Add(body_text(camera.panel, u8(u8"Pr\u00e9-visualiza\u00e7\u00e3o simulada")), 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
     camera.body->Add(body_text(camera.panel, u8(u8"Legenda: contorno escuro = selecionado | seta = orienta\u00e7\u00e3o | cinza + IGN = ignorado.")), 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
