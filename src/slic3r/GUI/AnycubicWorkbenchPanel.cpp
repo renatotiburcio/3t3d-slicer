@@ -34,7 +34,7 @@ wxStaticText* heading(wxWindow* parent, const wxString& text, int size = 12)
     return label;
 }
 
-wxStaticBoxSizer* card(wxWindow* parent, const wxString& title)
+wxStaticBoxSizer* card(wxWindow* parent, const wxString& title, const wxColour& accent)
 {
     auto* result = new wxStaticBoxSizer(wxVERTICAL, parent, title);
     result->GetStaticBox()->SetBackgroundColour(kSurface);
@@ -42,6 +42,10 @@ wxStaticBoxSizer* card(wxWindow* parent, const wxString& title)
     wxFont font = result->GetStaticBox()->GetFont();
     font.SetWeight(wxFONTWEIGHT_BOLD);
     result->GetStaticBox()->SetFont(font);
+    auto* stripe = new wxPanel(result->GetStaticBox(), wxID_ANY, wxDefaultPosition, wxSize(-1, 4));
+    stripe->SetBackgroundColour(accent);
+    stripe->SetMinSize(wxSize(-1, 4));
+    result->Add(stripe, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 8);
     return result;
 }
 
@@ -85,7 +89,7 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     root->Add(header, 0, wxEXPAND);
 
     auto* content = new wxBoxSizer(wxHORIZONTAL);
-    auto* printers = card(this, u8(u8"Impressoras na rede"));
+    auto* printers = card(this, u8(u8"Impressoras na rede"), kCyan);
     auto* selected = new wxPanel(this);
     selected->SetBackgroundColour(wxColour(232, 248, 245));
     auto* selected_sizer = new wxBoxSizer(wxVERTICAL);
@@ -101,7 +105,7 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     content->Add(printers, 0, wxEXPAND | wxALL, 14);
 
     auto* center = new wxBoxSizer(wxVERTICAL);
-    auto* job = card(this, u8(u8"Tarefa de impress\u00e3o"));
+    auto* job = card(this, u8(u8"Tarefa de impress\u00e3o"), kCyan);
     m_job = new wxStaticText(this, wxID_ANY, wxEmptyString);
     m_layers = new wxStaticText(this, wxID_ANY, wxEmptyString);
     m_objects = new wxStaticText(this, wxID_ANY, wxEmptyString);
@@ -113,7 +117,7 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     job->Add(m_progress, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 12);
     center->Add(job, 0, wxEXPAND | wxTOP | wxBOTTOM, 14);
 
-    auto* camera = card(this, u8(u8"C\u00e2mera / placa de impress\u00e3o"));
+    auto* camera = card(this, u8(u8"C\u00e2mera / placa de impress\u00e3o"), kGreen);
     m_plate_preview = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxSize(320, 190));
     m_plate_preview->SetBackgroundColour(kSlate);
     m_plate_preview->Bind(wxEVT_PAINT, [this](wxPaintEvent&) {
@@ -142,11 +146,12 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     });
     camera->Add(m_plate_preview, 1, wxEXPAND | wxALL, 8);
     camera->Add(new wxStaticText(this, wxID_ANY, u8(u8"Pr\u00e9-visualiza\u00e7\u00e3o simulada")), 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
+    camera->Add(new wxStaticText(this, wxID_ANY, u8(u8"Ciano, magenta e verde identificam os objetos da tarefa.")), 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
     center->Add(camera, 1, wxEXPAND | wxBOTTOM, 14);
     content->Add(center, 2, wxEXPAND | wxRIGHT, 2);
 
     auto* right = new wxBoxSizer(wxVERTICAL);
-    auto* control = card(this, "Controle");
+    auto* control = card(this, "Controle", kCyan);
     m_state = new wxStaticText(this, wxID_ANY, wxEmptyString);
     m_temperatures = new wxStaticText(this, wxID_ANY, wxEmptyString);
     control->Add(m_state, 0, wxALL, 12);
@@ -170,11 +175,11 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     control->Add(actions, 0, wxLEFT | wxRIGHT | wxBOTTOM, 12);
     right->Add(control, 0, wxEXPAND | wxTOP | wxBOTTOM, 14);
 
-    auto* materials = card(this, u8(u8"Gest\u00e3o de materiais"));
+    auto* materials = card(this, u8(u8"Gest\u00e3o de materiais"), kMagenta);
     m_materials = new wxStaticText(this, wxID_ANY, u8(u8"ACE: 4 posi\u00e7\u00f5es simuladas\nPLA 1   PLA 2   PLA 3   PLA 4"));
     materials->Add(m_materials, 0, wxALL, 12);
     right->Add(materials, 0, wxEXPAND | wxBOTTOM, 14);
-    auto* device = card(this, u8(u8"Informa\u00e7\u00f5es do dispositivo"));
+    auto* device = card(this, u8(u8"Informa\u00e7\u00f5es do dispositivo"), kGreen);
     m_device = new wxStaticText(this, wxID_ANY, wxEmptyString);
     device->Add(m_device, 0, wxALL, 12);
     right->Add(device, 0, wxEXPAND | wxBOTTOM, 14);
@@ -231,6 +236,7 @@ void AnycubicWorkbenchPanel::on_skip_objects(wxCommandEvent&)
 {
     const auto& snapshot = m_simulator.snapshot();
     wxDialog dialog(this, wxID_ANY, u8(u8"Ignorar objetos"), wxDefaultPosition, wxSize(760, 520), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
+    dialog.SetBackgroundColour(kBackground);
     auto* root = new wxBoxSizer(wxVERTICAL);
     root->Add(heading(&dialog, u8(u8"Selecione os objetos que ser\u00e3o ignorados"), 13), 0, wxALL, 18);
     root->Add(new wxStaticText(&dialog, wxID_ANY, u8(u8"Marque ou desmarque objetos. O ID exibido na placa corresponde ao ID da lista.")), 0, wxLEFT | wxRIGHT | wxBOTTOM, 18);
@@ -253,13 +259,17 @@ void AnycubicWorkbenchPanel::on_skip_objects(wxCommandEvent&)
     });
     body->Add(preview, 1, wxEXPAND | wxRIGHT, 18);
     auto* list = new wxCheckListBox(&dialog, wxID_ANY);
+    list->SetBackgroundColour(kSurface);
+    list->SetForegroundColour(kInk);
     for (std::size_t i = 0; i < snapshot.print_objects.size(); ++i) {
         const bool skipped = std::find(snapshot.skipped_object_ids.begin(), snapshot.skipped_object_ids.end(), static_cast<std::uint32_t>(i)) != snapshot.skipped_object_ids.end();
         list->Append(wxString::Format(u8(u8"ID %zu  \u2014  %s%s"), i, wxString::FromUTF8(snapshot.print_objects[i]), skipped ? u8(u8" (j\u00e1 ignorado)") : wxString()));
         list->Check(static_cast<unsigned int>(i), skipped);
     }
     body->Add(list, 1, wxEXPAND); root->Add(body, 1, wxEXPAND | wxLEFT | wxRIGHT, 18);
-    root->Add(dialog.CreateStdDialogButtonSizer(wxOK | wxCANCEL), 0, wxEXPAND | wxALL, 18);
+    root->Add(new wxStaticText(&dialog, wxID_ANY, u8(u8"Objetos marcados ser\u00e3o pulados pelo simulador e ficar\u00e3o identificados na placa.")), 0, wxLEFT | wxRIGHT | wxTOP, 18);
+    auto* buttons = dialog.CreateStdDialogButtonSizer(wxOK | wxCANCEL);
+    root->Add(buttons, 0, wxEXPAND | wxALL, 18);
     dialog.SetSizerAndFit(root); dialog.SetMinSize(wxSize(680, 460));
     if (dialog.ShowModal() != wxID_OK) return;
     std::vector<std::uint32_t> ids;
