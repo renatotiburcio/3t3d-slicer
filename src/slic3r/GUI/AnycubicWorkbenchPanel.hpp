@@ -39,6 +39,7 @@ private:
     wxStaticText*           m_device{nullptr};
     wxStaticText*           m_materials{nullptr};
     wxGauge*                m_progress{nullptr};
+    wxStaticText*           m_progress_status{nullptr};
     wxButton*               m_pause_resume{nullptr};
     wxButton*               m_stop{nullptr};
     wxButton*               m_skip_objects{nullptr};

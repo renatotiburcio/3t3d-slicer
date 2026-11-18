@@ -213,8 +213,8 @@ WorkbenchCard card(wxWindow* parent, const wxString& title, const wxColour& acce
     header_sizer->Add(label, 0, wxLEFT | wxRIGHT | wxTOP, kCardPadding + 2);
     auto* stripe = new wxPanel(header, wxID_ANY, wxDefaultPosition, wxSize(-1, 3));
     stripe->SetBackgroundColour(accent);
-    stripe->SetMinSize(wxSize(-1, 3));
-    header_sizer->Add(stripe, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, kCardPadding);
+    stripe->SetMinSize(wxSize(-1, 2));
+    header_sizer->Add(stripe, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 16);
     header->SetSizer(header_sizer);
     root->Add(header, 0, wxEXPAND);
     auto* body = new wxBoxSizer(wxVERTICAL);
@@ -302,8 +302,15 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
         const auto points = object_points(plate, 3);
         const auto shapes = object_shapes(plate, 3, 15);
         for (std::size_t i = 0; i < shapes.size() && i < 3; ++i) {
+            const wxRect shape = shapes[i];
+            const int depth = 5;
+            dc.SetPen(wxPen(wxColour(190, 195, 202), 1));
+            dc.SetBrush(wxBrush(wxColour(190, 195, 202)));
+            dc.DrawRoundedRectangle(shape.x + depth, shape.y - depth, shape.width, shape.height, 4);
             dc.SetBrush(wxBrush(colors[i])); dc.SetPen(wxPen(*wxWHITE, 1));
-            dc.DrawRoundedRectangle(shapes[i], 4);
+            dc.DrawRoundedRectangle(shape, 4);
+            dc.SetBrush(wxBrush(wxColour(255, 255, 255, 90)));
+            dc.DrawRoundedRectangle(shape.x + 4, shape.y + 3, std::max(4, shape.width - 8), 3, 2);
             dc.SetTextForeground(*wxWHITE);
             dc.DrawText(wxString::Format("%zu", i + 1), points[i].x - 4, points[i].y - 7);
         }
@@ -315,6 +322,9 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     task_details->Add(m_objects, 0, wxBOTTOM, 6);
     task_row->Add(task_details, 1, wxEXPAND);
     job.body->Add(task_row, 0, wxEXPAND | wxALL, 12);
+    m_progress_status = body_text(job.surface, u8("Imprimindo..."));
+    m_progress_status->SetForegroundColour(kCyan);
+    job.body->Add(m_progress_status, 0, wxLEFT | wxRIGHT | wxBOTTOM, 12);
     job.body->Add(m_progress, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 12);
     center->Add(job.panel, 0, wxEXPAND | wxTOP | wxBOTTOM, kCardGap);
 
@@ -326,7 +336,7 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
         dc.SetBackground(wxBrush(kSlate));
         dc.Clear();
         const wxSize size = m_plate_preview->GetClientSize();
-        const wxRect plate(30, 22, std::max(140, size.x - 60), std::max(110, size.y - 44));
+        const wxRect plate(30, 22, std::max(140, size.x - 60), std::max(100, size.y - 70));
         dc.SetBrush(wxBrush(wxColour(226, 229, 233)));
         dc.SetPen(wxPen(wxColour(155, 160, 166), 1));
         dc.DrawRoundedRectangle(plate, 10);
@@ -364,6 +374,18 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
                 dc.DrawRoundedRectangle(selected_shape, 10);
             }
         }
+        const int controls_y = size.y - 34;
+        dc.SetBrush(wxBrush(kCyan)); dc.SetPen(wxPen(wxColour(255, 255, 255), 1));
+        dc.DrawCircle(34, controls_y, 15);
+        dc.SetBrush(wxBrush(*wxWHITE));
+        const wxPoint play_icon[] = {wxPoint(30, controls_y - 6), wxPoint(30, controls_y + 6), wxPoint(39, controls_y)};
+        dc.DrawPolygon(3, play_icon);
+        dc.SetPen(wxPen(wxColour(220, 224, 229), 2));
+        const int right = size.x - 28;
+        dc.DrawLine(right - 8, controls_y - 7, right - 2, controls_y - 7);
+        dc.DrawLine(right - 8, controls_y - 7, right - 8, controls_y - 1);
+        dc.DrawLine(right + 8, controls_y + 7, right + 2, controls_y + 7);
+        dc.DrawLine(right + 8, controls_y + 7, right + 8, controls_y + 1);
     });
     m_plate_preview->Bind(wxEVT_LEFT_DOWN, [this](wxMouseEvent& event) {
         const wxSize size = m_plate_preview->GetClientSize();
@@ -597,6 +619,8 @@ void AnycubicWorkbenchPanel::refresh_snapshot()
         object_summary += wxString::Format(u8(u8"\nID %zu  \u2014  %s"), i, wxString::FromUTF8(snapshot.print_objects[i]));
     m_objects->SetLabel(object_summary);
     m_progress->SetValue(static_cast<int>(snapshot.progress_percent));
+    m_progress_status->SetLabel(snapshot.state == AnycubicWorkbenchState::paused ? u8("Pausada") :
+                                snapshot.state == AnycubicWorkbenchState::printing ? u8("Imprimindo...") : state_text(snapshot.state));
     m_temperatures->SetLabel(wxString::Format(u8(u8"Bico: %.0f/%.0f \u00b0C   Mesa: %.0f/%.0f \u00b0C"),
                                                snapshot.nozzle_temperature, snapshot.nozzle_target_temperature,
                                                snapshot.bed_temperature, snapshot.bed_target_temperature));
