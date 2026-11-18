@@ -22,6 +22,7 @@
 #include <wx/bookctrl.h>
 #include "slic3r/GUI/LazyPage.hpp"
 #include "slic3r/GUI/Monitor.hpp"
+#include "slic3r/GUI/AnycubicWorkbenchPanel.hpp"
 #include "slic3r/GUI/PrinterWebView.hpp"
 #include "slic3r/GUI/MultiMachinePage.hpp"
 #include "slic3r/GUI/CalibrationPanel.hpp"
@@ -1601,6 +1602,8 @@ void MainFrame::init_tabpanel() {
     m_monitor_page = new LazyPage<MonitorPanel>(m_tabpanel, TAB_ID_MONITOR, 20);
     m_lazy_pages.push_back(m_monitor_page);
     m_tabpanel->AddPage(TAB_ID_MONITOR, m_monitor_page, _L("Device"), "tab_monitor_active");
+    m_workbench_panel = new AnycubicWorkbenchPanel(m_tabpanel);
+    m_tabpanel->AddPage(TAB_ID_WORKBENCH, m_workbench_panel, "Bancada", "tab_monitor_active");
 
     m_printer_view_page = new LazyPage<PrinterWebView>(m_tabpanel, TAB_ID_MONITOR_WEB, 50, [this](wxWindow* parent) {
         auto* view = new PrinterWebView(parent);

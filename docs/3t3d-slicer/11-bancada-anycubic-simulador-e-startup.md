@@ -33,13 +33,14 @@ Tambem foram atualizados textos visiveis em erros fatais, WebView2, atualizacao,
 
 - CMake 4.4.4 regenerou o projeto `Visual Studio 18 2026`.
 - `OrcaSlicer_app_gui.vcxproj` Release compilou com sucesso.
+- A aba inicial `Bancada` foi adicionada ao aplicativo com tarefa, progresso, camadas, temperaturas, camera simulada, ACE, dispositivo e controles seguros.
+- `slic3rutils_tests.exe "[Anycubic][Workbench]"` passou: 3 casos e 18 assertions.
 - O warning `LNK4098` nao reapareceu.
-- O teste `test_anycubic_workbench_state.cpp` foi adicionado ao alvo `slic3rutils`; sua execucao fica pendente porque a compilacao completa do alvo de testes foi interrompida durante a unidade GUI de longa duracao.
 - Nenhuma conexao com a Kobra 4 Combo foi executada.
 
 ### Proximas etapas
 
 - Criar a pagina visual da Bancada usando o snapshot e o simulador.
 - Conectar os cards de tarefa, controle, camera, materiais e informacoes do dispositivo.
-- Executar os testes automatizados ja adicionados para as transicoes do simulador.
+- Validar visualmente a aba `Bancada` no executavel Release.
 - Quando a impressora estiver livre, validar a traducao do protocolo Anycubic e substituir o simulador somente no caminho real.

@@ -44,6 +44,7 @@
 #define TAB_ID_PREPARE       "prepare"
 #define TAB_ID_PREVIEW       "preview"
 #define TAB_ID_MONITOR       "monitor"
+#define TAB_ID_WORKBENCH     "workbench"
 // Printer-agents mode shows the legacy web page alongside the native Device tab, so it needs an
 // id of its own: sharing TAB_ID_MONITOR makes every name lookup resolve to whichever of the two
 // comes first, which silently defeats PluginPages' selection round-trip across a tab relayout.
@@ -80,6 +81,7 @@ class MonitorPanel;
 class MultiMachinePage;
 class ProjectPanel;
 class CalibrationPanel;
+class AnycubicWorkbenchPanel;
 class PrinterWebView;
 class FilamentGroupPopup;
 class PA_Calibration_Dlg;
@@ -526,6 +528,7 @@ public:
     void set_undo_redo_enabled(bool undo, bool redo);
     //BBS: GUI refactor
     LazyPage<MonitorPanel>* m_monitor_page{ nullptr };
+    AnycubicWorkbenchPanel* m_workbench_panel{ nullptr };
 
     //AuxiliaryPanel*       m_auxiliary{ nullptr };
     LazyPage<MultiMachinePage>* m_multi_machine_page{ nullptr };

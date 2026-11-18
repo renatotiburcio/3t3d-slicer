@@ -14,6 +14,7 @@ void AnycubicKobra4Simulator::reset()
     m_snapshot = AnycubicWorkbenchSnapshot{};
     m_snapshot.serial_number = "SIM-K4C-0001";
     m_snapshot.host = "simulator://anycubic-kobra-4-combo";
+    m_snapshot.job_name = "1117-1304-Body(01)_PLA_0.12_15h1m28s";
     m_snapshot.camera_available = true;
     m_snapshot.ace_available = true;
     m_snapshot.ace_slot_count = 4;
