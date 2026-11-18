@@ -216,7 +216,10 @@ WorkbenchCard card(wxWindow* parent, const wxString& title, const wxColour& acce
     stripe->SetMinSize(wxSize(-1, 2));
     header_sizer->Add(stripe, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 16);
     header->SetSizer(header_sizer);
-    root->Add(header, 0, wxEXPAND);
+    // The application navigation already identifies the active Bancada view.
+    // A second black title bar made the screen visually heavier than the
+    // Anycubic layout, so keep the branding in the application chrome only.
+    header->Hide();
     auto* body = new wxBoxSizer(wxVERTICAL);
     root->Add(body, 1, wxEXPAND | wxALL, kCardPadding);
     surface->SetSizer(root);
@@ -447,7 +450,7 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     m_state->SetForegroundColour(kGreen);
     control.body->Add(m_state, 0, wxLEFT | wxRIGHT | wxTOP, 12);
     m_temperatures->Hide();
-    m_control_metrics = new wxPanel(control.surface, wxID_ANY, wxDefaultPosition, wxSize(-1, 126));
+    m_control_metrics = new wxPanel(control.surface, wxID_ANY, wxDefaultPosition, wxSize(-1, 102));
     m_control_metrics->SetBackgroundColour(kSurface);
     m_control_metrics->Bind(wxEVT_PAINT, [this](wxPaintEvent&) {
         wxAutoBufferedPaintDC dc(m_control_metrics);
@@ -456,7 +459,7 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
         const wxSize size = m_control_metrics->GetClientSize();
         const int gap = 7;
         const int width = std::max(92, (size.x - gap * 2) / 3);
-        const int height = 53;
+        const int height = 43;
         const wxString labels[] = {"Bocal", "Mesa aquecida", "Luz da câmera", "Vent. modelo", "Modo de velocidade", "Detecção"};
         const wxString values[] = {
             wxString::Format("%.0f°C / %.0f°C", snapshot.nozzle_temperature, snapshot.nozzle_target_temperature),
@@ -482,9 +485,9 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
             dc.SetPen(wxPen(wxColour(232, 234, 238), 1));
             dc.DrawRoundedRectangle(tile, 9);
             dc.SetTextForeground(wxColour(128, 132, 140));
-            dc.DrawText(label, tile.x + 10, tile.y + 8);
+            dc.DrawText(label, tile.x + 9, tile.y + 6);
             dc.SetTextForeground(kInk);
-            dc.DrawText(value, tile.x + 10, tile.y + 28);
+            dc.DrawText(value, tile.x + 9, tile.y + 22);
         }
     });
     control.body->Add(m_control_metrics, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 10);
@@ -510,7 +513,7 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     auto materials = card(this, u8(u8"Gest\u00e3o de materiais"), kMagenta);
     m_materials = body_text(materials.surface, u8(u8"ACE: 4 posi\u00e7\u00f5es simuladas\nPLA 1   PLA 2   PLA 3   PLA 4"));
     materials.body->Add(m_materials, 0, wxLEFT | wxRIGHT | wxTOP, 12);
-    m_material_spools = new wxPanel(materials.surface, wxID_ANY, wxDefaultPosition, wxSize(-1, 108));
+    m_material_spools = new wxPanel(materials.surface, wxID_ANY, wxDefaultPosition, wxSize(-1, 88));
     m_material_spools->SetBackgroundColour(kSurface);
     m_material_spools->Bind(wxEVT_PAINT, [this](wxPaintEvent&) {
         wxAutoBufferedPaintDC dc(m_material_spools);
@@ -523,13 +526,13 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
             const int x = slot * i + slot / 2;
             dc.SetPen(wxPen(wxColour(215, 218, 223), 1));
             dc.SetBrush(wxBrush(wxColour(245, 246, 248)));
-            dc.DrawEllipse(x - 18, 14, 36, 62);
+            dc.DrawEllipse(x - 16, 8, 32, 54);
             dc.SetBrush(wxBrush(filament[i]));
-            dc.DrawRoundedRectangle(x - 13, 19, 26, 52, 8);
+            dc.DrawRoundedRectangle(x - 11, 13, 22, 42, 7);
             dc.SetBrush(wxBrush(wxColour(248, 249, 251)));
-            dc.DrawEllipse(x - 7, 34, 14, 18);
-            dc.SetTextForeground(kInk); dc.DrawText(names[i], x - 11, 79);
-            dc.SetTextForeground(wxColour(120, 124, 132)); dc.DrawText(wxString::Format("%d", i + 1), x - 3, 94);
+            dc.DrawEllipse(x - 6, 25, 12, 16);
+            dc.SetTextForeground(kInk); dc.DrawText(names[i], x - 11, 61);
+            dc.SetTextForeground(wxColour(120, 124, 132)); dc.DrawText(wxString::Format("%d", i + 1), x - 3, 75);
         }
     });
     materials.body->Add(m_material_spools, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 8);
@@ -537,7 +540,7 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     auto device = card(this, u8(u8"Informa\u00e7\u00f5es do dispositivo"), kGreen);
     m_device = body_text(device.surface, wxEmptyString);
     auto* device_row = new wxBoxSizer(wxHORIZONTAL);
-    m_printer_image = new wxStaticBitmap(device.surface, wxID_ANY, load_printer_cover(wxSize(132, 100)));
+    m_printer_image = new wxStaticBitmap(device.surface, wxID_ANY, load_printer_cover(wxSize(116, 82)));
     m_printer_image->SetBackgroundColour(kSurface);
     device_row->Add(m_printer_image, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 12);
     device_row->Add(m_device, 1, wxALIGN_CENTER_VERTICAL);
