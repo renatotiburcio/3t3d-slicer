@@ -56,6 +56,7 @@ public:
     void set_progress(std::uint32_t current_layer, std::uint32_t total_layers);
     void set_temperatures(double nozzle, double nozzle_target, double bed, double bed_target);
     void set_print_objects(std::vector<std::string> object_names);
+    void set_skipped_objects(const std::vector<std::uint32_t>& object_ids);
     void skip_objects(const std::vector<std::uint32_t>& object_ids);
     void tick(std::uint32_t elapsed_seconds);
 

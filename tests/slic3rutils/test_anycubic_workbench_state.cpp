@@ -70,3 +70,16 @@ TEST_CASE("Anycubic Kobra 4 Combo simulator accepts project object names", "[Any
     CHECK(simulator.snapshot().print_objects[1] == "Suporte real");
     CHECK(simulator.snapshot().skipped_object_ids.empty());
 }
+
+TEST_CASE("Anycubic Kobra 4 Combo simulator can undo skipped objects", "[Anycubic][Workbench]")
+{
+    AnycubicKobra4Simulator simulator;
+    simulator.set_skipped_objects({0, 1});
+    simulator.set_skipped_objects({1});
+
+    REQUIRE(simulator.snapshot().skipped_object_ids.size() == 1);
+    CHECK(simulator.snapshot().skipped_object_ids.front() == 1);
+
+    simulator.set_skipped_objects({});
+    CHECK(simulator.snapshot().skipped_object_ids.empty());
+}

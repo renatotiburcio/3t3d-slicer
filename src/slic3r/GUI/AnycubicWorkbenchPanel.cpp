@@ -535,9 +535,8 @@ void AnycubicWorkbenchPanel::on_skip_objects(wxCommandEvent&)
     if (dialog.ShowModal() != wxID_OK) return;
     std::vector<std::uint32_t> ids;
     for (unsigned int i = 0; i < list->GetCount(); ++i) if (list->IsChecked(i)) ids.push_back(static_cast<std::uint32_t>(i));
-    if (ids.empty()) return;
-    if (wxMessageBox(u8(u8"Os objetos selecionados ser\u00e3o ignorados somente no simulador. Deseja continuar?"), u8(u8"Confirmar a\u00e7\u00e3o"), wxYES_NO | wxICON_WARNING, this) != wxYES) return;
-    m_simulator.skip_objects(ids); refresh_snapshot(); m_plate_preview->Refresh();
+    if (wxMessageBox(u8(u8"As altera\u00e7\u00f5es ser\u00e3o aplicadas somente no simulador. Deseja continuar?"), u8(u8"Confirmar a\u00e7\u00e3o"), wxYES_NO | wxICON_WARNING, this) != wxYES) return;
+    m_simulator.set_skipped_objects(ids); refresh_snapshot(); m_plate_preview->Refresh();
 }
 
 } // namespace Slic3r::GUI

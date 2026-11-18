@@ -66,6 +66,17 @@ void AnycubicKobra4Simulator::set_print_objects(std::vector<std::string> object_
         m_snapshot.skipped_object_ids.end());
 }
 
+void AnycubicKobra4Simulator::set_skipped_objects(const std::vector<std::uint32_t>& object_ids)
+{
+    m_snapshot.skipped_object_ids.clear();
+    for (std::uint32_t object_id : object_ids) {
+        if (object_id < m_snapshot.print_objects.size() &&
+            std::find(m_snapshot.skipped_object_ids.begin(), m_snapshot.skipped_object_ids.end(), object_id) ==
+                m_snapshot.skipped_object_ids.end())
+            m_snapshot.skipped_object_ids.push_back(object_id);
+    }
+}
+
 void AnycubicKobra4Simulator::skip_objects(const std::vector<std::uint32_t>& object_ids)
 {
     for (std::uint32_t object_id : object_ids) {
