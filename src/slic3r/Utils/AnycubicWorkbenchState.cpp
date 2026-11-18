@@ -1,6 +1,7 @@
 #include "AnycubicWorkbenchState.hpp"
 
 #include <algorithm>
+#include <utility>
 
 namespace Slic3r {
 
@@ -51,6 +52,18 @@ void AnycubicKobra4Simulator::set_temperatures(double nozzle, double nozzle_targ
     m_snapshot.nozzle_target_temperature = nozzle_target;
     m_snapshot.bed_temperature = bed;
     m_snapshot.bed_target_temperature = bed_target;
+}
+
+void AnycubicKobra4Simulator::set_print_objects(std::vector<std::string> object_names)
+{
+    if (object_names.empty())
+        return;
+
+    m_snapshot.print_objects = std::move(object_names);
+    m_snapshot.skipped_object_ids.erase(
+        std::remove_if(m_snapshot.skipped_object_ids.begin(), m_snapshot.skipped_object_ids.end(),
+                       [this](std::uint32_t id) { return id >= m_snapshot.print_objects.size(); }),
+        m_snapshot.skipped_object_ids.end());
 }
 
 void AnycubicKobra4Simulator::skip_objects(const std::vector<std::uint32_t>& object_ids)

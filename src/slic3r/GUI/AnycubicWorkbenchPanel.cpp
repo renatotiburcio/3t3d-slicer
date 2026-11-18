@@ -1,7 +1,10 @@
 #include "AnycubicWorkbenchPanel.hpp"
+#include "GUI_App.hpp"
+#include "Plater.hpp"
 
 #include <algorithm>
 #include <cmath>
+#include <utility>
 #include <wx/button.h>
 #include <wx/checklst.h>
 #include <wx/dcbuffer.h>
@@ -249,8 +252,27 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     m_timer.Start(1000);
 }
 
+void AnycubicWorkbenchPanel::sync_project_objects()
+{
+    if (wxGetApp().plater() == nullptr)
+        return;
+
+    const auto& objects = wxGetApp().plater()->model().objects;
+    if (objects.empty())
+        return;
+
+    std::vector<std::string> names;
+    names.reserve(objects.size());
+    for (std::size_t i = 0; i < objects.size(); ++i) {
+        const std::string fallback = "Objeto " + std::to_string(i + 1);
+        names.push_back(objects[i] != nullptr && !objects[i]->name.empty() ? objects[i]->name : fallback);
+    }
+    m_simulator.set_print_objects(std::move(names));
+}
+
 void AnycubicWorkbenchPanel::refresh_snapshot()
 {
+    sync_project_objects();
     const auto& snapshot = m_simulator.snapshot();
     m_state->SetLabel(wxString("Estado: ") + state_text(snapshot.state));
     m_state->SetForegroundColour(snapshot.state == AnycubicWorkbenchState::printing ? kGreen : kInk);

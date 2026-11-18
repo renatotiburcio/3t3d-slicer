@@ -18,6 +18,7 @@ public:
     explicit AnycubicWorkbenchPanel(wxWindow* parent);
 
 private:
+    void sync_project_objects();
     void refresh_snapshot();
     void on_timer(wxTimerEvent& event);
     void on_pause_resume(wxCommandEvent& event);
