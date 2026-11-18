@@ -513,7 +513,16 @@ void AnycubicWorkbenchPanel::on_skip_objects(wxCommandEvent&)
         list->Append(wxString::Format(u8(u8"ID %zu  \u2014  %s%s"), i, wxString::FromUTF8(snapshot.print_objects[i]), skipped ? u8(u8" (j\u00e1 ignorado)") : wxString()));
         list->Check(static_cast<unsigned int>(i), skipped);
     }
-    preview->Bind(wxEVT_LEFT_DOWN, [preview, list, &snapshot](wxMouseEvent& event) {
+    auto* selected_count = body_text(&dialog, wxEmptyString, kBackground);
+    auto update_selected_count = [list, selected_count]() {
+        unsigned int count = 0;
+        for (unsigned int i = 0; i < list->GetCount(); ++i)
+            count += list->IsChecked(i) ? 1u : 0u;
+        selected_count->SetLabel(wxString::Format(u8(u8"%u objeto(s) selecionado(s) para ignorar"), count));
+    };
+    update_selected_count();
+    list->Bind(wxEVT_CHECKLISTBOX, [update_selected_count](wxCommandEvent&) { update_selected_count(); });
+    preview->Bind(wxEVT_LEFT_DOWN, [preview, list, &snapshot, update_selected_count](wxMouseEvent& event) {
         const wxSize size = preview->GetClientSize();
         const wxRect plate(28, 28, std::max(180, size.x - 56), std::max(160, size.y - 56));
         const auto shapes = object_shapes(plate, snapshot.print_objects.size(), 38);
@@ -523,11 +532,15 @@ void AnycubicWorkbenchPanel::on_skip_objects(wxCommandEvent&)
             if (hit_shape.Contains(event.GetPosition())) {
                 list->Check(static_cast<unsigned int>(i), !list->IsChecked(static_cast<unsigned int>(i)));
                 preview->Refresh();
+                update_selected_count();
                 break;
             }
         }
     });
-    body->Add(list, 1, wxEXPAND); root->Add(body, 1, wxEXPAND | wxLEFT | wxRIGHT, 18);
+    auto* list_column = new wxBoxSizer(wxVERTICAL);
+    list_column->Add(selected_count, 0, wxLEFT | wxRIGHT | wxBOTTOM, 6);
+    list_column->Add(list, 1, wxEXPAND);
+    body->Add(list_column, 1, wxEXPAND); root->Add(body, 1, wxEXPAND | wxLEFT | wxRIGHT, 18);
     root->Add(new wxStaticText(&dialog, wxID_ANY, u8(u8"Objetos marcados ser\u00e3o pulados pelo simulador e ficar\u00e3o identificados na placa.")), 0, wxLEFT | wxRIGHT | wxTOP, 18);
     auto* buttons = dialog.CreateStdDialogButtonSizer(wxOK | wxCANCEL);
     root->Add(buttons, 0, wxEXPAND | wxALL, 18);
