@@ -178,7 +178,8 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
             dc.DrawCircle(points[i], 25);
             dc.SetTextForeground(*wxWHITE);
             dc.DrawText(wxString::Format("ID %zu", i), points[i].x - 16, points[i].y - 8);
-            if (m_selected_object == static_cast<int>(i)) {
+            if (m_selected_object == static_cast<int>(i) ||
+                std::find(m_selected_objects.begin(), m_selected_objects.end(), static_cast<int>(i)) != m_selected_objects.end()) {
                 dc.SetBrush(*wxTRANSPARENT_BRUSH);
                 dc.SetPen(wxPen(kInk, 3));
                 dc.DrawCircle(points[i], 30);
@@ -197,6 +198,7 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
             const double dy = event.GetPosition().y - points[i].y;
             if (std::sqrt(dx * dx + dy * dy) <= 34.0) {
                 m_selected_object = static_cast<int>(i);
+                m_selected_objects = {m_selected_object};
                 if (wxGetApp().plater() != nullptr &&
                     static_cast<std::size_t>(m_selected_object) < wxGetApp().plater()->model().objects.size()) {
                     auto* canvas = wxGetApp().plater()->get_view3D_canvas3D();
@@ -281,6 +283,16 @@ void AnycubicWorkbenchPanel::sync_project_objects()
     m_simulator.set_print_objects(std::move(names));
     const int selected = wxGetApp().plater()->get_selected_object_idx();
     m_selected_object = selected >= 0 && static_cast<std::size_t>(selected) < objects.size() ? selected : -1;
+    m_selected_objects.clear();
+    if (auto* canvas = wxGetApp().plater()->get_view3D_canvas3D(); canvas != nullptr) {
+        for (const auto& entry : canvas->get_selection().get_selected_object_instances()) {
+            if (entry.first >= 0 && static_cast<std::size_t>(entry.first) < objects.size() &&
+                std::find(m_selected_objects.begin(), m_selected_objects.end(), entry.first) == m_selected_objects.end())
+                m_selected_objects.push_back(entry.first);
+        }
+    }
+    if (m_selected_objects.empty() && m_selected_object >= 0)
+        m_selected_objects.push_back(m_selected_object);
 }
 
 void AnycubicWorkbenchPanel::refresh_snapshot()

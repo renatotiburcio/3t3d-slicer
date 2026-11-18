@@ -5,6 +5,8 @@
 #include <wx/panel.h>
 #include <wx/timer.h>
 
+#include <vector>
+
 class wxButton;
 class wxGauge;
 class wxPanel;
@@ -40,6 +42,7 @@ private:
     wxButton*               m_skip_objects{nullptr};
     wxPanel*                m_plate_preview{nullptr};
     int                     m_selected_object{-1};
+    std::vector<int>        m_selected_objects;
 };
 
 } // namespace Slic3r::GUI
