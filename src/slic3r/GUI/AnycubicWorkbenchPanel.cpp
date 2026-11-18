@@ -422,8 +422,41 @@ AnycubicWorkbenchPanel::AnycubicWorkbenchPanel(wxWindow* parent)
     auto control = card(this, "Controle", kCyan);
     m_state = body_text(control.surface, wxEmptyString);
     m_temperatures = body_text(control.surface, wxEmptyString);
-    control.body->Add(m_state, 0, wxALL, 12);
-    control.body->Add(m_temperatures, 0, wxLEFT | wxRIGHT | wxBOTTOM, 12);
+    m_state->SetForegroundColour(kGreen);
+    control.body->Add(m_state, 0, wxLEFT | wxRIGHT | wxTOP, 12);
+    m_temperatures->Hide();
+    m_control_metrics = new wxPanel(control.surface, wxID_ANY, wxDefaultPosition, wxSize(-1, 126));
+    m_control_metrics->SetBackgroundColour(kSurface);
+    m_control_metrics->Bind(wxEVT_PAINT, [this](wxPaintEvent&) {
+        wxAutoBufferedPaintDC dc(m_control_metrics);
+        dc.SetBackground(wxBrush(kSurface)); dc.Clear();
+        const auto& snapshot = m_simulator.snapshot();
+        const wxSize size = m_control_metrics->GetClientSize();
+        const int gap = 7;
+        const int width = std::max(92, (size.x - gap * 2) / 3);
+        const int height = 53;
+        const wxString labels[] = {"Bocal", "Mesa aquecida", "Luz da câmera", "Vent. modelo", "Modo de velocidade", "Detecção"};
+        const wxString values[] = {
+            wxString::Format("%.0f°C / %.0f°C", snapshot.nozzle_temperature, snapshot.nozzle_target_temperature),
+            wxString::Format("%.0f°C / %.0f°C", snapshot.bed_temperature, snapshot.bed_target_temperature),
+            snapshot.camera_available ? u8(u8"LIGADA") : u8(u8"DESLIGADA"),
+            wxString::Format("%.0f%%", snapshot.fan_percent),
+            "Standard",
+            snapshot.state == AnycubicWorkbenchState::printing ? u8(u8"Ativa") : u8(u8"Aguardando")};
+        for (int i = 0; i < 6; ++i) {
+            const int x = (i % 3) * (width + gap);
+            const int y = (i / 3) * (height + gap);
+            const wxRect tile(x, y, width, height);
+            dc.SetBrush(wxBrush(wxColour(249, 250, 252)));
+            dc.SetPen(wxPen(wxColour(232, 234, 238), 1));
+            dc.DrawRoundedRectangle(tile, 9);
+            dc.SetTextForeground(wxColour(128, 132, 140));
+            dc.DrawText(labels[i], tile.x + 10, tile.y + 8);
+            dc.SetTextForeground(kInk);
+            dc.DrawText(values[i], tile.x + 10, tile.y + 28);
+        }
+    });
+    control.body->Add(m_control_metrics, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 10);
     auto* actions = new wxBoxSizer(wxHORIZONTAL);
     m_pause_resume = new wxButton(control.surface, wxID_ANY, u8(u8"Pausar"));
     m_stop = new wxButton(control.surface, wxID_ANY, u8(u8"Parar simula\u00e7\u00e3o"));
@@ -564,6 +597,8 @@ void AnycubicWorkbenchPanel::refresh_snapshot()
     m_pause_resume->Enable(snapshot.state == AnycubicWorkbenchState::printing || snapshot.state == AnycubicWorkbenchState::paused);
     m_stop->Enable(snapshot.state == AnycubicWorkbenchState::printing || snapshot.state == AnycubicWorkbenchState::paused);
     m_skip_objects->Enable(snapshot.state == AnycubicWorkbenchState::printing && !snapshot.print_objects.empty());
+    if (m_control_metrics != nullptr)
+        m_control_metrics->Refresh();
     Layout();
 }
 

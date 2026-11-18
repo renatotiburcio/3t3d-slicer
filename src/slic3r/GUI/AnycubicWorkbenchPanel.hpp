@@ -35,6 +35,7 @@ private:
     wxStaticText*           m_layers{nullptr};
     wxStaticText*           m_objects{nullptr};
     wxStaticText*           m_temperatures{nullptr};
+    wxPanel*                m_control_metrics{nullptr};
     wxStaticText*           m_device{nullptr};
     wxStaticText*           m_materials{nullptr};
     wxGauge*                m_progress{nullptr};
