@@ -47,6 +47,22 @@ Kobra 4 Combo, sera necessario confirmar no protocolo Anycubic o indice dos obje
 estado permitido, a resposta de erro e a persistencia apos pausa/retomada. A implementacao
 real deve exigir impressora conectada, tarefa imprimindo e confirmacao do usuario.
 
+### Auditoria do Anycubic Slicer Next
+
+A arvore aberta do Anycubic Slicer Next foi pesquisada por `workbench`, `skip_objects`,
+`exclude_object`, camera, materiais e controle de eixos. Os componentes nativos e o
+protocolo de impressao estao presentes, mas a tela de Bancada mostrada nas referencias
+nao aparece como uma implementacao nativa completa nessa arvore; parte dela depende da
+camada de dispositivo/UI proprietaria. A consolidacao no 3T3D deve usar os padroes
+abertos de wxWidgets e os adaptadores de dispositivo, sem copiar uma dependencia
+proprietaria ou presumir que o protocolo seja identico para todas as marcas.
+
+A selecao de objetos foi evoluida para um dialogo proprio com pre-visualizacao da placa,
+IDs desenhados nas pecas, lista correspondente `ID -> nome`, selecao/desselecao e
+confirmacao. A viewport 3D real do modo Preparar continua como proxima integracao: ela
+devera ser reutilizada apenas como visualizador/selecionador, sem permitir transformacao
+ou alteracao do projeto durante uma impressao.
+
 ### Startup
 
 O assistente de configuracao agora e aberto antes da inicializacao opcional do agente de rede. A sincronizacao de plugins cloud foi removida do caminho de startup. Depois que o fluxo modal do assistente termina, a rede/plugin e inicializada de forma atrasada para preservar LAN futura sem bloquear a tela de boas-vindas.

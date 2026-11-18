@@ -2,8 +2,9 @@
 
 #include <algorithm>
 #include <wx/button.h>
-#include <wx/choicdlg.h>
+#include <wx/checklst.h>
 #include <wx/dcbuffer.h>
+#include <wx/dialog.h>
 #include <wx/gauge.h>
 #include <wx/msgdlg.h>
 #include <wx/sizer.h>
@@ -203,26 +204,72 @@ void AnycubicWorkbenchPanel::on_stop(wxCommandEvent&)
 void AnycubicWorkbenchPanel::on_skip_objects(wxCommandEvent&)
 {
     const auto& snapshot = m_simulator.snapshot();
-    wxArrayString choices;
+    wxDialog dialog(this, wxID_ANY, utf8(u8"Ignorar objetos"), wxDefaultPosition, wxSize(760, 520),
+                   wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
+    auto* root = new wxBoxSizer(wxVERTICAL);
+    auto* title = make_heading(&dialog, utf8(u8"Selecione os objetos que serão ignorados"));
+    root->Add(title, 0, wxALL, 18);
+    root->Add(new wxStaticText(&dialog, wxID_ANY,
+                               utf8(u8"Clique na caixa de seleção para marcar ou desmarcar objetos. O ID abaixo da peça corresponde ao ID da lista.")),
+              0, wxLEFT | wxRIGHT | wxBOTTOM, 18);
+
+    auto* body = new wxBoxSizer(wxHORIZONTAL);
+    auto* preview = new wxPanel(&dialog, wxID_ANY, wxDefaultPosition, wxSize(390, 300));
+    preview->SetBackgroundColour(wxColour(42, 44, 48));
+    preview->Bind(wxEVT_PAINT, [&snapshot, preview](wxPaintEvent&) {
+        wxAutoBufferedPaintDC dc(preview);
+        dc.SetBackground(wxBrush(wxColour(42, 44, 48)));
+        dc.Clear();
+        const wxSize size = preview->GetClientSize();
+        const wxRect plate(28, 28, std::max(180, size.GetWidth() - 56), std::max(160, size.GetHeight() - 56));
+        dc.SetBrush(wxBrush(wxColour(218, 220, 223)));
+        dc.SetPen(wxPen(wxColour(120, 124, 130), 1));
+        dc.DrawRoundedRectangle(plate, 10);
+        const wxColour colors[] = {wxColour(69, 145, 214), wxColour(224, 145, 70), wxColour(76, 176, 126)};
+        const wxPoint centers[] = {{plate.x + plate.width / 3, plate.y + plate.height / 3},
+                                   {plate.x + plate.width * 2 / 3, plate.y + plate.height / 3},
+                                   {plate.x + plate.width / 2, plate.y + plate.height * 2 / 3}};
+        for (std::size_t i = 0; i < snapshot.print_objects.size() && i < 3; ++i) {
+            const bool skipped = std::find(snapshot.skipped_object_ids.begin(), snapshot.skipped_object_ids.end(),
+                                           static_cast<std::uint32_t>(i)) != snapshot.skipped_object_ids.end();
+            dc.SetBrush(wxBrush(skipped ? wxColour(160, 163, 168) : colors[i]));
+            dc.SetPen(wxPen(skipped ? wxColour(110, 112, 116) : wxColour(255, 255, 255), 2));
+            dc.DrawCircle(centers[i], 38);
+            dc.SetTextForeground(*wxWHITE);
+            dc.DrawText(wxString::Format("ID %zu", i), centers[i].x - 18, centers[i].y - 9);
+        }
+        dc.SetTextForeground(wxColour(235, 235, 235));
+        dc.DrawText(utf8(u8"Placa de impressão"), 18, 8);
+    });
+    body->Add(preview, 1, wxEXPAND | wxRIGHT, 18);
+
+    auto* list = new wxCheckListBox(&dialog, wxID_ANY);
     for (std::size_t i = 0; i < snapshot.print_objects.size(); ++i) {
         const bool skipped = std::find(snapshot.skipped_object_ids.begin(), snapshot.skipped_object_ids.end(),
                                        static_cast<std::uint32_t>(i)) != snapshot.skipped_object_ids.end();
-        choices.Add(wxString::Format("ID %zu — %s%s", i, wxString::FromUTF8(snapshot.print_objects[i]),
-                                     skipped ? utf8(u8" (já ignorado)") : wxString()));
+        list->Append(wxString::Format("ID %zu  —  %s%s", i, wxString::FromUTF8(snapshot.print_objects[i]),
+                                      skipped ? utf8(u8" (já ignorado)") : wxString()));
+        list->Check(static_cast<unsigned int>(i), skipped);
     }
+    body->Add(list, 1, wxEXPAND);
+    root->Add(body, 1, wxEXPAND | wxLEFT | wxRIGHT, 18);
 
-    wxMultiChoiceDialog dialog(this, utf8(u8"Selecione as peças que não devem mais ser impressas nesta tarefa:"),
-                               utf8(u8"Ignorar objetos"), choices);
-    if (dialog.ShowModal() != wxID_OK || dialog.GetSelections().empty())
-        return;
-
-    if (wxMessageBox(utf8(u8"A peça selecionada será ignorada somente no simulador. Deseja continuar?"),
-                     utf8(u8"Confirmar ação"), wxYES_NO | wxICON_WARNING, this) != wxYES)
+    auto* buttons = dialog.CreateStdDialogButtonSizer(wxOK | wxCANCEL);
+    root->Add(buttons, 0, wxEXPAND | wxALL, 18);
+    dialog.SetSizerAndFit(root);
+    dialog.SetMinSize(wxSize(680, 460));
+    if (dialog.ShowModal() != wxID_OK)
         return;
 
     std::vector<std::uint32_t> object_ids;
-    for (int selection : dialog.GetSelections())
-        object_ids.push_back(static_cast<std::uint32_t>(selection));
+    for (unsigned int i = 0; i < list->GetCount(); ++i)
+        if (list->IsChecked(i))
+            object_ids.push_back(static_cast<std::uint32_t>(i));
+    if (object_ids.empty())
+        return;
+    if (wxMessageBox(utf8(u8"Os objetos selecionados serão ignorados somente no simulador. Deseja continuar?"),
+                     utf8(u8"Confirmar ação"), wxYES_NO | wxICON_WARNING, this) != wxYES)
+        return;
     m_simulator.skip_objects(object_ids);
     refresh_snapshot();
     m_plate_preview->Refresh();
