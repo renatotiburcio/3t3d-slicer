@@ -42,6 +42,13 @@ Anycubic instalado e sem modificar seus arquivos.
   `img/material-edit...svg`, imagens de estado sem impressora e imagens de
   impressora LAN.
 
+Evidence desta sessao MCP: abertura do alvo `ev_1ab432331ddfad54ee9ac2dc5c2595793c19784b4a6a6c65315c0e9ce65718b7`,
+`WorkbenchV3_vue.js` em `ev_1ab432331ddfad54ee9ac2dc5c2595793c19784b4a6a6c65315c0e9ce65718b7`,
+`axisControlContext` em `ev_20492f460c94dca7b67addb410071f5e0683081091a5f0c16734bdca214eab69`,
+`material-edit.svg` em `ev_ec577b480d5db569e28e12a53fdcab9b091dae6e8dcc023385ed244e267513c4`.
+O inventario mais amplo anterior tambem registrou `icon-skip.svg`, `printerList.vue`
+e `deviceManagement.vue` no Evidence `ev_e75861791eb3b7ac70174f9cb7a30228667f2da16134893a3816733a285ce27f`.
+
 Esses fatos mostram que a tela de Bancada da Anycubic e uma aplicacao web Vue
 embutida, com componentes de dominio para lista de impressoras, gerenciamento do
 dispositivo, controle de eixos, materiais e selecao de objetos. A UI nao e uma
@@ -52,6 +59,12 @@ atingiu o limite de tempo do Ghidra. Isso e uma limitacao de cobertura, nao uma
 conclusao de que o DLL nao contenha informacoes. A proxima analise deve usar
 buscas menores e focadas, ou a sessao MCP apos reinicio, preservando cada
 Evidence retornada.
+
+Uma busca de referencias direta para o literal do modulo Vue nao retornou
+referencias acionaveis (`ev_cbd402e342dd9a813e33344944d2e01d261d226b1b653c1bd26b9d8fa176efbd`),
+o que e compativel com o nome estar em um indice/manifesto de recursos ou em
+dados nao referenciados pelo fluxo nativo analisado. Isso nao invalida a
+observacao do modulo; apenas limita a inferencia de quem o carrega.
 
 ## Consequencia para o 3T3D
 
